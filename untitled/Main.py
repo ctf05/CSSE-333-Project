@@ -11,28 +11,80 @@ def connect(server, database, username, password):
 conn = connect("titan.csse.rose-hulman.edu", "OneProduct", "SodaBaseUserbeadlich", "Password123")
 conn.autocommit = True
 cursor = conn.cursor()
-
-def show_selected():
-    print("Selected option:", combobox.get())
+global tree
+global combobox
+global entry1
+global entry2
+global entry3
+global entry4
+global entry5
+global entry6
 
 def add_clicked():
-    print("Button 1 clicked")
+    try:
+        cursor.execute("EXEC dbo.addCustomer @FName = ?, @LName = ?, @Phone = ?, @Address = ?, @BillingID = ?", (entry1.get(), entry2.get(), entry3.get(), entry4.get(), None))
+    except:
+        print("error")
 
 def update_clicked():
-    print("Button 2 clicked")
+    try:
+        cursor.execute("EXEC dbo.UpdateCustomer @ID = ?, @FName = ?, @LName = ?, @Phone = ?, @Address = ?, @BillingID = ?", (entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get(), None))
+    except:
+        print("error")
 
 def delete_clicked():
-    print("Button 3 clicked")
+    try:
+        cursor.execute("EXEC dbo.DeleteCustomer @ID = ?", (entry1.get()))
+    except:
+        print("error")
 
 def view_clicked():
-    print("Button 4 clicked")
+    print(combobox.get())
+    if combobox.get() == "Application":
+        cursor.execute("""
+        SELECT *
+        FROM Application""")
+        print(cursor.fetchall())
+    elif combobox.get() == "Customer":
+        cursor.execute("""
+        SELECT *
+        FROM Customer""")
+    elif combobox.get() == "BillingInfo":
+        cursor.execute("""
+        SELECT *
+        FROM BillingInfo""")
+    elif combobox.get() == "Category":
+        cursor.execute("""
+        SELECT *
+        FROM Category""")
+    elif combobox.get() == "onOrder":
+        cursor.execute("""
+        SELECT *
+        FROM onOrder""")
+    elif combobox.get() == "Order":
+        cursor.execute("""
+        SELECT *
+        FROM Order""")
+    elif combobox.get() == "Product":
+        cursor.execute("""
+        SELECT *
+        FROM Product""")
+    elif combobox.get() == "Review":
+        cursor.execute("""
+        SELECT *
+        FROM Review""")
+    elif combobox.get() == "Supplier":
+        cursor.execute("""
+        SELECT *
+        FROM Supplier""")
+    insert_data(cursor.fetchall())
 
-def insert_data():
-    data_list.append([entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get(), entry6.get()])
-    for i in range(len(data_list)):
-        for j in range(10):
-            table.set(i, j, data_list[i][j])
-    print(data_list)
+
+def insert_data(data_list):
+    for item in table.get_children():
+        table.delete(item)
+    for row in data_list:
+        table.insert("", tk.END, values=row)
 
 def login_success():
     root = tk.Tk()
@@ -40,12 +92,18 @@ def login_success():
     root.title("Admin Control Panel")
 
     # Create a dropdown menu
+    global combobox
     combobox_label = ttk.Label(root, text="Select a table:")
     combobox_label.grid(row=0, column=0, padx=10, pady=10)
     combobox = ttk.Combobox(root, values=["Application", "BillingInfo", "Category", "Customer", "onOrder", "Order", "Product", "Review", "Supplier"])
     combobox.current(0)
     combobox.grid(row=0, column=1, padx=10, pady=10)
-
+    global entry1
+    global entry2
+    global entry3
+    global entry4
+    global entry5
+    global entry6
     # Create six textboxes
     entry1 = ttk.Entry(root)
     entry1.grid(row=1, column=0, padx=5, pady=10)
@@ -72,7 +130,7 @@ def login_success():
 
 
     # Create a table to display data
-
+    global table
     table = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6"), show='headings')
     table.heading("col1", text="Column 1")
     table.heading("col2", text="Column 2")
@@ -81,7 +139,6 @@ def login_success():
     table.heading("col5", text="Column 5")
     table.heading("col6", text="Column 6")
     table.grid(row=4, column=0, columnspan=6, padx=10, pady=10)
-    root.mainloop()
     pass
 
 def login_failure():
@@ -133,7 +190,4 @@ def execute_stored_procedure(conn):
     conn.close()
     #return results
 
-cursor.execute("""
-    SELECT *
-    FROM Application""")
-print(cursor.fetchall())
+
