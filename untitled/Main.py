@@ -147,7 +147,8 @@ def login_failure():
 
 def check_credentials():
     # check if the entered username and password match
-    # the expected values
+    # the expected values  
+
     if username_entry.get() == 'admin' and password_entry.get() == 'password':
         login_success()
         root.destroy()
@@ -171,10 +172,20 @@ def home_page():
     listbox = tk.Listbox(root, width=100)
     for product in products:
         listbox.insert(tk.END, product)
-    listbox.pack()
+    listbox.pack()    
 
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
+
+def application_page():
+    form = tk.Toplevel(root)
+    form.title("Submit Product Application")
+    form.geometry("1250x500")
+    form_label = tk.Label(form, text="Submit Product Application", font=("TkDefaultFont", 16))
+    form_label.pack()
+
+def view_product_page():
+    pass   
 
 root = tk.Tk()
 root.title("Login")
@@ -193,11 +204,11 @@ password_entry.grid(row=1, column=1)
 
 login_button = tk.Button(root, text="Login", command=check_credentials)
 login_button.grid(row=2, column=0, columnspan=2)
+
+add_product_button = tk.Button(root, text="Submit Product Application", command=application_page)
+add_product_button.grid(row=3, column=0, columnspan=2)
+
 root.mainloop()
-
-
-
-
 
 
 def execute_stored_procedure(conn):
