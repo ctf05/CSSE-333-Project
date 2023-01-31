@@ -150,8 +150,31 @@ def check_credentials():
     # the expected values
     if username_entry.get() == 'admin' and password_entry.get() == 'password':
         login_success()
+        root.destroy()
+    elif username_entry.get() == 'home' and password_entry.get() == 'page':
+        home_page()
+        root.destroy()
     else:
         login_failure()
+
+def home_page():
+    root = tk.Tk()
+    root.title("Home Page")
+    root.geometry("1250x500")
+
+    label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
+    label.pack()
+
+    cursor.execute("""Select * From Product Where ForSale = 1""")
+    products = cursor.fetchall()
+    
+    listbox = tk.Listbox(root, width=100)
+    for product in products:
+        listbox.insert(tk.END, product)
+    listbox.pack()
+
+    close_button = tk.Button(root, text="Close", command=root.destroy)
+    close_button.pack()
 
 root = tk.Tk()
 root.title("Login")
