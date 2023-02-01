@@ -236,8 +236,56 @@ def application_page():
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
     cancel_button.pack()
 
+
+
+def cart_page():
+    root = tk.Tk()
+    root.title("Products in cart")
+    root.geometry("750x500")
+    form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
+    form_label.pack()
+    cursor.execute("""SELECT * FROM [Order]""")
+    orders = cursor.fetchall()
+    listbox = tk.Listbox(root, width=100, selectmode = 'single')
+    for order in orders:
+        listbox.insert(tk.END, order)
+    listbox.pack()
+  
+    
+    def selected_order():
+        selection = tuple((listbox.get(listbox.curselection())).strip('()').split(','))
+        print(selection[0])
+        return(int(selection[0]))
+ 
+    def show_details():
+        details_listbox.delete(0,tk.END)
+        column_info = "Order Num, Product Num, Amount, Price"
+        details_listbox.insert(tk.END, column_info)
+        cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
+        details = cursor.fetchall()
+        for detail in details:
+            details_listbox.insert(tk.END, detail)
+        
+
+    display_details = tk.Button(root, text='details', command=show_details)
+    display_details.pack()
+    
+    details_listbox = tk.Listbox(root, width=100, selectmode = 'single')
+    details_listbox.pack()
+    
+    def on_back_click():
+        root.destroy()
+
+    cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+    cancel_button.pack()
+
+    
+
 root = tk.Tk()
 root.title("Login")
+
+check_cart = tk.Button(root, text="Cart", command=cart_page)
+check_cart.grid(row=4,column=0)
 
 username_label = tk.Label(root, text="Username:")
 username_label.grid(row=0, column=0)
