@@ -163,6 +163,10 @@ def home_page():
     root.title("Home Page")
     root.geometry("1250x500")
 
+    def go_to_product(event):
+        cs = listbox.curselection()
+        print(products[cs[0]])
+
     label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
     label.pack()
 
@@ -172,7 +176,8 @@ def home_page():
     listbox = tk.Listbox(root, width=100)
     for product in products:
         listbox.insert(tk.END, product)
-    listbox.pack()    
+    listbox.bind("<Double-1>", go_to_product)
+    listbox.pack()
 
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
@@ -226,6 +231,7 @@ def application_page():
         print("Product Category:", product_category)
         print("Product Price:", product_price)
         print("Product Description:", product_description)
+        submit_application(product_name, product_company, product_category, product_price, product_description)
 
     submit_button = tk.Button(root, text="Submit Application", command=on_submit_click)
     submit_button.pack()
@@ -235,7 +241,6 @@ def application_page():
 
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
     cancel_button.pack()
-
 
 
 def cart_page():
@@ -259,7 +264,7 @@ def cart_page():
  
     def show_details():
         details_listbox.delete(0,tk.END)
-        column_info = "Order Num, Product Num, Amount, Price"
+        column_info = "Order Num"
         details_listbox.insert(tk.END, column_info)
         cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
         details = cursor.fetchall()
@@ -280,6 +285,50 @@ def cart_page():
     cancel_button.pack()
 
     
+
+def open_product_page(product):
+    product_page = tk.Toplevel(root)
+    product_page.title("Product Details")
+    product_page.geometry("400x400")
+
+    label = tk.Label(product_page, text="Product Details", font=("TkDefaultFont", 16))
+    label.pack()
+
+    product_name_label = tk.Label(product_page, text="Product Name:")
+    product_name_label.pack()
+
+    product_name_display = tk.Label(product_page, text=product["name"])
+    product_name_display.pack()
+
+    product_company_label = tk.Label(product_page, text="Product Company:")
+    product_company_label.pack()
+
+    product_company_display = tk.Label(product_page, text=product["company"])
+    product_company_display.pack()
+
+    product_category_label = tk.Label(product_page, text="Product Category:")
+    product_category_label.pack()
+
+    product_category_display = tk.Label(product_page, text=product["category"])
+    product_category_display.pack()
+
+    product_price_label = tk.Label(product_page, text="Product Price:")
+    product_price_label.pack()
+
+    product_price_display = tk.Label(product_page, text=product["price"])
+    product_price_display.pack()
+
+    product_description_label = tk.Label(product_page, text="Product Description:")
+    product_description_label.pack()
+
+    product_description_display = tk.Label(product_page, text=product["description"])
+    product_description_display.pack()
+
+    def on_back_click():
+        product_page.destroy()
+
+    back_button = tk.Button(product_page, text="Back", command=on_back_click)
+    back_button.pack()
 
 root = tk.Tk()
 root.title("Login")
@@ -308,6 +357,7 @@ add_product_button.grid(row=3, column=0, columnspan=2)
 root.mainloop()
 
 
+
 def execute_stored_procedure(conn):
     #connect to the SQL Server instance
 
@@ -322,3 +372,6 @@ def execute_stored_procedure(conn):
     #return results
 
 
+def submit_application(product_name, product_company, product_category, product_price, product_description):
+    #cursor.execute("{CALL dbo.}")
+    pass
