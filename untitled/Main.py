@@ -178,14 +178,63 @@ def home_page():
     close_button.pack()
 
 def application_page():
-    form = tk.Toplevel(root)
-    form.title("Submit Product Application")
-    form.geometry("1250x500")
-    form_label = tk.Label(form, text="Submit Product Application", font=("TkDefaultFont", 16))
-    form_label.pack()
+    root = tk.Tk()
+    root.title("Submit Product Application")
+    root.geometry("1250x500")
 
-def view_product_page():
-    pass   
+    label = tk.Label(root, text="Submit Product Application", font=("TkDefaultFont", 16))
+    label.pack()
+
+    product_name_label = tk.Label(root, text="Product Name:")
+    product_name_label.pack()
+
+    product_name_entry = tk.Entry(root)
+    product_name_entry.pack()
+
+    product_company_label = tk.Label(root, text="Product Company:")
+    product_company_label.pack()
+
+    product_company_entry = tk.Entry(root)
+    product_company_entry.pack()
+
+    product_category_label = tk.Label(root, text="Product Category:")
+    product_category_label.pack()
+
+    product_category_entry = tk.Entry(root)
+    product_category_entry.pack()
+
+    product_price_label = tk.Label(root, text="Product Price:")
+    product_price_label.pack()
+
+    product_price_entry = tk.Entry(root)
+    product_price_entry.pack()
+
+    product_description_label = tk.Label(root, text="Product Description:")
+    product_description_label.pack()
+
+    product_description_text = tk.Text(root, height=5, width=30)
+    product_description_text.pack()
+
+    def on_submit_click():
+        product_name = product_name_entry.get()
+        product_company = product_company_entry.get()
+        product_category = product_category_entry.get()
+        product_price = product_price_entry.get()
+        product_description = product_description_text.get("1.0", "end")
+        print("Product Name:", product_name)
+        print("Product Company:", product_company)
+        print("Product Category:", product_category)
+        print("Product Price:", product_price)
+        print("Product Description:", product_description)
+
+    submit_button = tk.Button(root, text="Submit Application", command=on_submit_click)
+    submit_button.pack()
+
+    def on_back_click():
+        root.destroy()
+
+    cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+    cancel_button.pack()
 
 root = tk.Tk()
 root.title("Login")
