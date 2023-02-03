@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+
+import bcrypt as bcrypt
 import pyodbc
 
 
@@ -19,6 +21,16 @@ global entry3
 global entry4
 global entry5
 global entry6
+global username_entry
+global password_entry
+global first_name_entry
+global last_name_entry
+global address_entry
+global phone_entry
+global card_entry
+global expiration_entry
+global security_entry
+global card_type_entry
 
 def add_clicked():
     try:
@@ -147,16 +159,34 @@ def login_failure():
 
 def check_credentials():
     # check if the entered username and password match
-    # the expected values  
+    # the expected values
+    global password_entry
+    password = password_entry.get().encode()
 
-    if username_entry.get() == 'admin' and password_entry.get() == 'password':
-        login_success()
-        root.destroy()
-    elif username_entry.get() == 'home' and password_entry.get() == 'page':
-        home_page()
-        root.destroy()
-    else:
+    cursor.execute("""
+        SELECT PasswordSalt
+        FROM Login
+        WHERE Username = ?""",(username_entry.get()))
+    try:
+        password_salt = cursor.fetchone()[0].encode()
+    except:
+        print("Username not found")
         login_failure()
+
+    password_hash = bcrypt.hashpw(password, password_salt)
+
+    cursor.execute("""
+        SELECT *
+        FROM Login
+        WHERE PasswordHash = ?""",(password_hash.decode()[0:49]))
+    try:
+        print(password_hash.decode()[0:49])
+        print(cursor.fetchone()[0])
+        login_success()
+    except:
+        print("Password incorrect")
+        login_failure()
+
 
 def home_page():
     root = tk.Tk()
@@ -229,6 +259,138 @@ def open_product_page(productID):
 def submit_application(product_name, product_company, product_category, product_price, product_description,  product_company_phone, product_company_website):
     cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
     (product_name, product_category, product_company, product_description, product_price, product_company_phone, product_company_website))
+
+def registration_page():
+    root = tk.Tk()
+    root.geometry("1250x500")
+    root.title("Registration Page")
+    global username_entry
+    global password_entry
+    global first_name_entry
+    global last_name_entry
+    global address_entry
+    global phone_entry
+    global card_entry
+    global expiration_entry
+    global security_entry
+    global card_type_entry
+    global username_label
+    global password_label
+    global first_name_label
+    global last_name_label
+    global address_label
+    global phone_label
+    global card_label
+    global expiration_label
+    global security_label
+    global card_type_label
+    # Create a label for the username input box
+    username_label = tk.Label(root, text="Username")
+    username_label.grid(row=0, column=0, padx=10, pady=10)
+    # Create an input box for the username
+    username_entry = tk.Entry(root)
+    username_entry.grid(row=0, column=1, padx=10, pady=10)
+    # Create a label for the password input box
+    password_label = tk.Label(root, text="Password")
+    password_label.grid(row=1, column=0, padx=10, pady=10)
+    # Create an input box for the password
+    password_entry = tk.Entry(root)
+    password_entry.grid(row=1, column=1, padx=10, pady=10)
+    # Create a label for the first name input box
+    first_name_label = tk.Label(root, text="First Name")
+    first_name_label.grid(row=2, column=0, padx=10, pady=10)
+    # Create an input box for the first name
+    first_name_entry = tk.Entry(root)
+    first_name_entry.grid(row=2, column=1, padx=10, pady=10)
+    # Create a label for the last name input box
+    last_name_label = tk.Label(root, text="Last Name")
+    last_name_label.grid(row=3, column=0, padx=10, pady=10)
+    # Create an input box for the last name
+    last_name_entry = tk.Entry(root)
+    last_name_entry.grid(row=3, column=1, padx=10, pady=10)
+    # Create a label for the address input box
+    address_label = tk.Label(root, text="Address")
+    address_label.grid(row=4, column=0, padx=10, pady=10)
+    # Create an input box for the address
+    address_entry = tk.Entry(root)
+    address_entry.grid(row=4, column=1, padx=10, pady=10)
+    # Create a label for the phone number input box
+    phone_label = tk.Label(root, text="Phone Number")
+    phone_label.grid(row=5, column=0, padx=10, pady=10)
+    # Create an input box for the phone number
+    phone_entry = tk.Entry(root)
+    phone_entry.grid(row=5, column=1, padx=10, pady=10)
+    # Create a label for the card number input box
+    card_label = tk.Label(root, text="Card Number")
+    card_label.grid(row=6, column=0, padx=10, pady=10)
+    # Create an input box for the card number
+    card_entry = tk.Entry(root)
+    card_entry.grid(row=6, column=1, padx=10, pady=10)
+    # Create a label for the expiration date input box
+    expiration_label = tk.Label(root, text="Expiration Date")
+    expiration_label.grid(row=7, column=0, padx=10, pady=10)
+    # Create an input box for the expiration date
+    expiration_entry = tk.Entry(root)
+    expiration_entry.grid(row=7, column=1, padx=10, pady=10)
+    # Create a label for the security code input box
+    security_label = tk.Label(root, text="Security Code")
+    security_label.grid(row=8, column=0, padx=10, pady=10)
+    # Create an input box for the security code
+    security_entry = tk.Entry(root)
+    security_entry.grid(row=8, column=1, padx=10, pady=10)
+    # Create a label for the card type input box
+    card_type_label = tk.Label(root, text="Card Type")
+    card_type_label.grid(row=9, column=0, padx=10, pady=10)
+    # Create a drop box for the card type
+    card_type_entry = ttk.Combobox(root, values=["Debit", "Credit"])
+    card_type_entry.grid(row=9, column=1, padx=10, pady=10)
+    # Create a submit button
+    submitRegister = tk.Button(root, text="Submit", command=SubmitRegister)
+    submitRegister.grid(row=10,column=0)
+
+def SubmitRegister():
+    global username_entry
+    global password_entry
+    global first_name_entry
+    global last_name_entry
+    global address_entry
+    global phone_entry
+    global card_entry
+    global expiration_entry
+    global security_entry
+    global card_type_entry
+    # Get the username from the input box
+    username = username_entry.get()
+    # Get the password from the input box
+    password = password_entry.get()
+    # Get the first name from the input box
+    first_name = first_name_entry.get()
+    # Get the last name from the input box
+    last_name = last_name_entry.get()
+    # Get the address from the input box
+    address = address_entry.get()
+    # Get the phone number from the input box
+    phone = phone_entry.get()
+    # Get the card number from the input box
+    card = card_entry.get()
+    # Get the expiration date from the input box
+    expiration = expiration_entry.get()
+    # Get the security code from the input box
+    security = security_entry.get()
+    # Get the card type from the input box
+    card_type = card_type_entry.get()
+
+    # Hash the password
+    password_salt = bcrypt.gensalt()
+    password_hash = bcrypt.hashpw(password.encode('utf8'), password_salt)
+
+    try:
+        cursor.execute("EXEC dbo.RegisterUser @UserName = ?, @PasswordSalt = ?, @PasswordHash = ?, @Address = ?, "
+                       "@FName = ?, @LName = ?, @Phone = ?, @CardType = ?, @CardNumber = ?, @ExperationDate = ?, @SecurityCode = ?",
+                       (username, password_salt.decode(), password_hash.decode()[0:49], address, first_name, last_name, phone, card_type,
+                        card, expiration, security))
+    except:
+        print("error")
 
 def application_page():
     root = tk.Tk()
@@ -411,6 +573,9 @@ login_button.grid(row=2, column=0, columnspan=2)
 
 add_product_button = tk.Button(root, text="Submit Product Application", command=application_page)
 add_product_button.grid(row=3, column=0, columnspan=2)
+
+register = tk.Button(root, text="Register", command=registration_page)
+register.grid(row=5,column=0)
 
 root.mainloop()
 
