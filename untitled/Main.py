@@ -247,42 +247,78 @@ def cart_page():
     root = tk.Tk()
     root.title("Products in cart")
     root.geometry("750x500")
+    
+    pad_label = tk.Label(root, text="       ", font=("TkDefaultFont", 16))
+    pad_label.grid(row=0, column=0)
+    
     form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
-    form_label.pack()
+    form_label.grid(row=0, column=1)
+    
     cursor.execute("""SELECT * FROM [Order]""")
     orders = cursor.fetchall()
     listbox = tk.Listbox(root, width=100, selectmode = 'single')
     for order in orders:
         listbox.insert(tk.END, order)
-    listbox.pack()
+    listbox.grid(row=1, column=1)
   
     
     def selected_order():
         selection = tuple((listbox.get(listbox.curselection())).strip('()').split(','))
         print(selection[0])
         return(int(selection[0]))
+    
+    def selected_detail():
+        selection = tuple((detail_listbox.get(detail_listbox.curselection())).strip('()').split(','))
+        print(selection)
+        return(selection)
  
     def show_details():
         details_listbox.delete(0,tk.END)
-        column_info = "Order Num"
+        column_info = "Order Num, Product Num, Product Name, Amount, Price"
         details_listbox.insert(tk.END, column_info)
         cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
         details = cursor.fetchall()
         for detail in details:
+            detail_string = "  "
             details_listbox.insert(tk.END, detail)
         
 
     display_details = tk.Button(root, text='details', command=show_details)
-    display_details.pack()
+    display_details.grid(row=2, column=1)
     
     details_listbox = tk.Listbox(root, width=100, selectmode = 'single')
-    details_listbox.pack()
+    details_listbox.grid(row=3, column=1)
+    
+   
+    def confirm_delete():
+        root = tk.Tk()
+        root.title("Confirmation Window")
+        root.geometry("200x200")
+        
+        form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
+        form_label.grid(row=0, column=0,columnspan=2)
+        
+        def delete_from_order():
+            cursor.execute("{CALL dbo.DeleteFromOrder (?,?)}", (selected_detail()[0],selected_detail()[1]))
+            root.destroy()
+            
+        def on_back_click():
+            root.destroy()
+    
+        confirm_button = tk.Button(root,text="Yes", command=delete_from_order)
+        confirm_button.grid(row=1, column=0)
+        
+        cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+        cancel_button.grid(row=1, column=1)
+
+    delete_button = tk.Button(root,text="Remove selected product from order", command=confirm_delete)
+    delete_button.grid(row=4, column=2)
     
     def on_back_click():
         root.destroy()
-
+    
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-    cancel_button.pack()
+    cancel_button.grid(row=4, column=1)
 
     
 
