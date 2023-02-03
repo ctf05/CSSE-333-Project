@@ -166,6 +166,7 @@ def home_page():
     def go_to_product(event):
         cs = listbox.curselection()
         print(products[cs[0]])
+        open_product_page(products[cs[0]][0])
 
     label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
     label.pack()
@@ -181,6 +182,49 @@ def home_page():
 
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
+
+def open_product_page(productID):
+    product_page = tk.Tk()
+    product_page.title("Product Details")
+    product_page.geometry("1250x500")
+
+    label = tk.Label(product_page, text="Product Details", font=("TkDefaultFont", 16))
+    label.pack()
+
+    cursor.execute("""Select * From Product Where ProductID = ?""", productID)
+    product = cursor.fetchall()[0]
+    print(product)
+
+    product_name_label = tk.Label(product_page, text="Product Name: ")
+    product_name_label.pack()
+    product_name_display = tk.Label(product_page, text=product[1])
+    product_name_display.pack()
+
+    product_company_label = tk.Label(product_page, text="Company: ")
+    product_company_label.pack()
+    product_company_display = tk.Label(product_page, text=product[2])
+    product_company_display.pack()
+
+    product_category_label = tk.Label(product_page, text="Category: ")
+    product_category_label.pack()
+    product_category_display = tk.Label(product_page, text=product[3])
+    product_category_display.pack()
+
+    product_price_label = tk.Label(product_page, text="Price: ")
+    product_price_label.pack()
+    product_price_display = tk.Label(product_page, text=product[4])
+    product_price_display.pack()
+
+    product_description_label = tk.Label(product_page, text="Description: ")
+    product_description_label.pack()
+    product_description_display = tk.Label(product_page, text=product[9])
+    product_description_display.pack()
+
+    def on_back_click():
+        product_page.destroy()
+
+    back_button = tk.Button(product_page, text="Back", command=on_back_click)
+    back_button.pack()
 
 def submit_application(product_name, product_company, product_category, product_price, product_description,  product_company_phone, product_company_website):
     cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
@@ -340,53 +384,9 @@ def cart_page():
         root.destroy()
     
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-    cancel_button.grid(row=4, column=1)
+    cancel_button.grid(row=4, column=1)   
 
-    
 
-def open_product_page(product):
-    product_page = tk.Toplevel(root)
-    product_page.title("Product Details")
-    product_page.geometry("400x400")
-
-    label = tk.Label(product_page, text="Product Details", font=("TkDefaultFont", 16))
-    label.pack()
-
-    product_name_label = tk.Label(product_page, text="Product Name:")
-    product_name_label.pack()
-
-    product_name_display = tk.Label(product_page, text=product["name"])
-    product_name_display.pack()
-
-    product_company_label = tk.Label(product_page, text="Product Company:")
-    product_company_label.pack()
-
-    product_company_display = tk.Label(product_page, text=product["company"])
-    product_company_display.pack()
-
-    product_category_label = tk.Label(product_page, text="Product Category:")
-    product_category_label.pack()
-
-    product_category_display = tk.Label(product_page, text=product["category"])
-    product_category_display.pack()
-
-    product_price_label = tk.Label(product_page, text="Product Price:")
-    product_price_label.pack()
-
-    product_price_display = tk.Label(product_page, text=product["price"])
-    product_price_display.pack()
-
-    product_description_label = tk.Label(product_page, text="Product Description:")
-    product_description_label.pack()
-
-    product_description_display = tk.Label(product_page, text=product["description"])
-    product_description_display.pack()
-
-    def on_back_click():
-        product_page.destroy()
-
-    back_button = tk.Button(product_page, text="Back", command=on_back_click)
-    back_button.pack()
 
 root = tk.Tk()
 root.title("Login")
