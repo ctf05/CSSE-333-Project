@@ -279,8 +279,9 @@ def cart_page():
         cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
         details = cursor.fetchall()
         for detail in details:
-            detail_string = "  "
-            details_listbox.insert(tk.END, detail)
+            price = str(detail[4])
+            detail_string = " {}, {}, {}, {}, ${}".format(detail[0],detail[1],detail[2],detail[3],price)
+            details_listbox.insert(tk.END, detail_string)
         
 
     display_details = tk.Button(root, text='details', command=show_details)
@@ -293,9 +294,9 @@ def cart_page():
     def confirm_delete():
         root = tk.Tk()
         root.title("Confirmation Window")
-        root.geometry("200x200")
+        root.geometry("500x100")
         
-        form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
+        form_label = tk.Label(root, text="Are you sure you want to remove the selected product from your order?", font=("TkDefaultFont", 12))
         form_label.grid(row=0, column=0,columnspan=2)
         
         def delete_from_order():
