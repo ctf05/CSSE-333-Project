@@ -182,6 +182,10 @@ def home_page():
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
 
+def submit_application(product_name, product_company, product_category, product_price, product_description,  product_company_phone, product_company_website):
+    cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
+    (product_name, product_category, product_company, product_description, product_price, product_company_phone, product_company_website))
+
 def application_page():
     root = tk.Tk()
     root.title("Submit Product Application")
@@ -214,24 +218,41 @@ def application_page():
     product_price_entry = tk.Entry(root)
     product_price_entry.pack()
 
+    product_company_website_label = tk.Label(root, text="Company Website:")
+    product_company_website_label.pack()
+
+    product_company_website_entry = tk.Entry(root)
+    product_company_website_entry.pack()
+
+    product_company_phone_label = tk.Label(root, text="Company Phone Number:")
+    product_company_phone_label.pack()
+
+    product_company_phone_entry = tk.Entry(root)
+    product_company_phone_entry.pack()
+
     product_description_label = tk.Label(root, text="Product Description:")
     product_description_label.pack()
 
     product_description_text = tk.Text(root, height=5, width=30)
     product_description_text.pack()
 
+    # TODO: add checking for phone input
     def on_submit_click():
         product_name = product_name_entry.get()
         product_company = product_company_entry.get()
         product_category = product_category_entry.get()
         product_price = product_price_entry.get()
         product_description = product_description_text.get("1.0", "end")
+        product_company_website = product_company_website_entry.get()
+        product_company_phone = product_company_phone_entry.get()
         print("Product Name:", product_name)
         print("Product Company:", product_company)
         print("Product Category:", product_category)
         print("Product Price:", product_price)
         print("Product Description:", product_description)
-        submit_application(product_name, product_company, product_category, product_price, product_description)
+        print("Product Company Website:", product_company_website)
+        print("Product Company Phone Number:" , product_company_phone)
+        submit_application(product_name, product_company, product_category, product_price, product_description, product_company_phone, product_company_website)
 
     submit_button = tk.Button(root, text="Submit Application", command=on_submit_click)
     submit_button.pack()
@@ -325,6 +346,4 @@ def execute_stored_procedure(conn):
     #return results
 
 
-def submit_application(product_name, product_company, product_category, product_price, product_description):
-    #cursor.execute("{CALL dbo.}")
-    pass
+
