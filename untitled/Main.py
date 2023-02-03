@@ -268,7 +268,7 @@ def cart_page():
         return(int(selection[0]))
     
     def selected_detail():
-        selection = tuple((detail_listbox.get(detail_listbox.curselection())).strip('()').split(','))
+        selection = tuple((details_listbox.get(details_listbox.curselection())).strip('()').split(','))
         print(selection)
         return(selection)
  
