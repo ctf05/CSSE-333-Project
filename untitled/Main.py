@@ -566,9 +566,6 @@ def cart_page(cid):
 root = tk.Tk()
 root.title("Login")
 
-check_cart = tk.Button(root, text="Cart", command=cart_page)
-check_cart.grid(row=4,column=0)
-
 username_label = tk.Label(root, text="Username:")
 username_label.grid(row=0, column=0)
 
