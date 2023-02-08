@@ -494,12 +494,18 @@ def cart_page(cid):
     form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
     form_label.grid(row=0, column=1)
     
-    cursor.execute("""SELECT * FROM [Order]""")
+    order_label = tk.Label(root, text="Order Number, Order Date, Address, Shipping Date", font=("TkDefaultFont", 10))
+    order_label.grid(row=1, column=1,sticky='W')
+    
+    cursor.execute("{CALL dbo.ReadCustomerOrders (?)}",(cid))
     orders = cursor.fetchall()
     listbox = tk.Listbox(root, width=100, selectmode = 'single')
     for order in orders:
-        listbox.insert(tk.END, order)
-    listbox.grid(row=1, column=1)
+        date = str(order[1])
+        ship_date = str(order[3])
+        order_string = "    {},    {},    {},    {}".format(order[0],date,order[2],ship_date)
+        listbox.insert(tk.END, order_string)
+    listbox.grid(row=2, column=1)
   
     
     def selected_order():
@@ -514,21 +520,22 @@ def cart_page(cid):
  
     def show_details():
         details_listbox.delete(0,tk.END)
-        column_info = "Order Num, Product Num, Product Name, Amount, Price"
-        details_listbox.insert(tk.END, column_info)
         cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
         details = cursor.fetchall()
         for detail in details:
             price = str(detail[4])
-            detail_string = " {}, {}, {}, {}, ${}".format(detail[0],detail[1],detail[2],detail[3],price)
+            detail_string = "    {},    {},    {},    {},    ${}".format(detail[0],detail[1],detail[2],detail[3],price)
             details_listbox.insert(tk.END, detail_string)
         
 
     display_details = tk.Button(root, text='details', command=show_details)
-    display_details.grid(row=2, column=1)
+    display_details.grid(row=3, column=1)
+    
+    detail_label = tk.Label(root, text="Order Number, Product Number, Product Name, Amount, Price", font=("TkDefaultFont", 10))
+    detail_label.grid(row=4, column=1,sticky='W')
     
     details_listbox = tk.Listbox(root, width=100, selectmode = 'single')
-    details_listbox.grid(row=3, column=1)
+    details_listbox.grid(row=5, column=1)
     
    
     def confirm_delete():
@@ -559,7 +566,7 @@ def cart_page(cid):
         root.destroy()
     
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-    cancel_button.grid(row=4, column=1)   
+    cancel_button.grid(row=6, column=1)   
 
 
 
