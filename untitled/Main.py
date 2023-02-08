@@ -217,8 +217,14 @@ def home_page(cid):
     listbox.bind("<Double-1>", go_to_product)
     listbox.pack()
 
+    def view_cart_page():
+        cart_page(cid)
+
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
+
+    cart_button = tk.Button(root, text="View Cart", command=view_cart_page)
+    cart_button.pack()
 
 def open_product_page(productID):
     product_page = tk.Tk()
@@ -477,7 +483,7 @@ def application_page():
     cancel_button.pack()
 
 
-def cart_page():
+def cart_page(cid):
     root = tk.Tk()
     root.title("Products in cart")
     root.geometry("750x500")
