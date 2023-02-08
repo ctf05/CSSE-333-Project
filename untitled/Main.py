@@ -5,7 +5,6 @@ import bcrypt as bcrypt
 import pyodbc
 
 
-
 def connect(server, database, username, password):
     conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
     return conn
@@ -174,24 +173,23 @@ def check_credentials():
         WHERE Username = ?""",(username_entry.get()))
     try:
         password_salt = cursor.fetchone()[0].encode()
+        password_hash = bcrypt.hashpw(password, password_salt)
+
+        cursor.execute("""
+                SELECT *
+                FROM Login
+                WHERE PasswordHash = ?""",(password_hash.decode()[0:49]))
+        try:
+            print(password_hash.decode()[0:49])
+            user = cursor.fetchone()
+            print(user)
+            print(user[1])
+            home_page(user[1])
+        except:
+            print("Password incorrect")
+            login_failure()
     except:
         print("Username not found")
-        login_failure()
-
-    password_hash = bcrypt.hashpw(password, password_salt)
-
-    cursor.execute("""
-        SELECT *
-        FROM Login
-        WHERE PasswordHash = ?""",(password_hash.decode()[0:49]))
-    try:
-        print(password_hash.decode()[0:49])
-        user = cursor.fetchone()
-        print(user)
-        print(user[1])
-        home_page(user[1])
-    except:
-        print("Password incorrect")
         login_failure()
 
 
@@ -200,22 +198,54 @@ def home_page(cid):
     root.title("Home Page")
     root.geometry("1250x500")
 
+    global products
+    products = []
+
     def go_to_product(event):
-        cs = listbox.curselection()
-        print(products[cs[0]])
-        open_product_page(products[cs[0]][0])
+        print("go to product")
+        csIndex = listbox.curselection()[0]
+        pid = listbox.get(csIndex).split(",")[0][1:]
+        open_product_page(pid)
 
     label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
     label.pack()
-
-    cursor.execute("""Select * From Product Where ForSale = 1""")
-    products = cursor.fetchall()
     
     listbox = tk.Listbox(root, width=100)
-    for product in products:
-        listbox.insert(tk.END, product)
-    listbox.bind("<Double-1>", go_to_product)
-    listbox.pack()
+    listbox.pack()   
+
+
+    def show_choice(event):
+        print("show choice")
+        print(var.get())
+        get_products(var.get())
+
+    def get_products(catName):
+        if catName == None:
+            cursor.execute("""Select * From Product Where ForSale = 1""")
+        else:
+            cursor.execute("""Select * From Product P Join Category C On P.CategoryID = C.CategoryID Where ForSale = 1 And C.Name = ?""", catName)
+        
+        products = cursor.fetchall()
+        listbox.delete(0, tk.END)
+        
+        for product in products:
+            listbox.insert(tk.END, product)
+        listbox.bind("<Double-1>", go_to_product)
+        listbox.pack()
+
+    get_products(None)
+
+    cursor.execute("""Select Name From Category""")
+    cats = cursor.fetchall()
+    options = []
+    for row in cats:
+        options.append(row[0])
+
+    var = tk.StringVar()
+    var.set(options[0]) # default value
+
+    dropdown = tk.OptionMenu(root, var, *options, command=show_choice)
+    dropdown.pack()
 
     def view_cart_page():
         cart_page(cid)
@@ -572,27 +602,31 @@ def cart_page(cid):
 
 root = tk.Tk()
 root.title("Login")
+root.geometry("500x400")
 
 username_label = tk.Label(root, text="Username:")
-username_label.grid(row=0, column=0)
+username_label.grid(row=0, column=4)
 
 password_label = tk.Label(root, text="Password:")
-password_label.grid(row=1, column=0)
+password_label.grid(row=1, column=4)
 
 username_entry = tk.Entry(root)
-username_entry.grid(row=0, column=1)
+username_entry.grid(row=0, column=5, columnspan=10)
 
 password_entry = tk.Entry(root, show="*")
-password_entry.grid(row=1, column=1)
+password_entry.grid(row=1, column=5, columnspan=10)
 
-login_button = tk.Button(root, text="Login", command=check_credentials)
-login_button.grid(row=2, column=0, columnspan=2)
+login_picture = tk.PhotoImage(file='login.png').subsample(5)
+login_button = tk.Button(root, image=login_picture, command=check_credentials)
+login_button.grid(row=5, column=1, columnspan=5)
 
-add_product_button = tk.Button(root, text="Submit Product Application", command=application_page)
-add_product_button.grid(row=3, column=0, columnspan=2)
+app_picture = tk.PhotoImage(file='SubmitProduct.png').subsample(5)
+add_product_button = tk.Button(root, image=app_picture, command=application_page)
+add_product_button.grid(row=5, column=10, columnspan=5)
 
-register = tk.Button(root, text="Register", command=registration_page)
-register.grid(row=5,column=0)
+register_picture = tk.PhotoImage(file='register.png').subsample(5)
+register = tk.Button(root, image=register_picture, command=registration_page)
+register.grid(row=5,column=15, columnspan=5)
 
 root.mainloop()
 
