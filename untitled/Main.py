@@ -14,12 +14,6 @@ conn.autocommit = True
 cursor = conn.cursor()
 global tree
 global combobox
-global entry1
-global entry2
-global entry3
-global entry4
-global entry5
-global entry6
 global username_entry
 global password_entry
 global first_name_entry
@@ -30,72 +24,35 @@ global card_entry
 global expiration_entry
 global security_entry
 global card_type_entry
+global table
 
-def add_clicked():
-    try:
-        cursor.execute("EXEC dbo.addCustomer @FName = ?, @LName = ?, @Phone = ?, @Address = ?, @BillingID = ?", (entry1.get(), entry2.get(), entry3.get(), entry4.get(), None))
-    except:
-        print("error")
-
-def update_clicked():
-    try:
-        cursor.execute("EXEC dbo.UpdateCustomer @ID = ?, @FName = ?, @LName = ?, @Phone = ?, @Address = ?, @BillingID = ?", (entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get(), None))
-    except:
-        print("error")
-
-def delete_clicked():
-    try:
-        cursor.execute("EXEC dbo.DeleteCustomer @ID = ?", (entry1.get()))
-    except:
-        print("error")
-
-def view_clicked():
-    print(combobox.get())
-    if combobox.get() == "Application":
-        cursor.execute("""
-        SELECT *
-        FROM Application""")
-        print(cursor.fetchall())
-    elif combobox.get() == "Customer":
-        cursor.execute("""
-        SELECT *
-        FROM Customer""")
-    elif combobox.get() == "BillingInfo":
-        cursor.execute("""
-        SELECT *
-        FROM BillingInfo""")
-    elif combobox.get() == "Category":
-        cursor.execute("""
-        SELECT *
-        FROM Category""")
-    elif combobox.get() == "onOrder":
-        cursor.execute("""
-        SELECT *
-        FROM onOrder""")
-    elif combobox.get() == "Order":
-        cursor.execute("""
-        SELECT *
-        FROM Order""")
-    elif combobox.get() == "Product":
-        cursor.execute("""
-        SELECT *
-        FROM Product""")
-    elif combobox.get() == "Review":
-        cursor.execute("""
-        SELECT *
-        FROM Review""")
-    elif combobox.get() == "Supplier":
-        cursor.execute("""
-        SELECT *
-        FROM Supplier""")
+def click(event):
+    print(event) #25 45 65 85
+    maxRange = len(table.item(table.selection())['values'])
+    for i in range(0, maxRange):
+        y = event.y
+        if (y >= (25 + (i * 20)) and y <= (45 + (i * 20))):
+            x = event.x
+            applicationID = table.item(table.selection())['values'][0]
+            productID = table.item(table.selection())['values'][1]
+            if (x >= 981):
+                cursor.execute("""EXEC dbo.DenyApplication @AppId = ?, @ProdId = ?""", (applicationID, productID))
+            else:
+                cursor.execute("""EXEC dbo.ApproveApplication @AppID = ?, @ProdId = ?""", (applicationID, productID))
+    cursor.execute("""EXEC dbo.getApplicatonInfo""")
     insert_data(cursor.fetchall())
 
 
 def insert_data(data_list):
+    global table
     for item in table.get_children():
         table.delete(item)
+    i = 0
     for row in data_list:
-        table.insert("", tk.END, values=row)
+        # if (row[5] != "Pending"):
+        #     continue
+        table.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], "~ Approve ~", "~ Deny ~"))
+        i += 1
 
 def login_success():
     root = tk.Tk()
@@ -104,52 +61,30 @@ def login_success():
 
     # Create a dropdown menu
     global combobox
-    combobox_label = ttk.Label(root, text="Select a table:")
-    combobox_label.grid(row=0, column=0, padx=10, pady=10)
-    combobox = ttk.Combobox(root, values=["Application", "BillingInfo", "Category", "Customer", "onOrder", "Order", "Product", "Review", "Supplier"])
-    combobox.current(0)
-    combobox.grid(row=0, column=1, padx=10, pady=10)
-    global entry1
-    global entry2
-    global entry3
-    global entry4
-    global entry5
-    global entry6
-    # Create six textboxes
-    entry1 = ttk.Entry(root)
-    entry1.grid(row=1, column=0, padx=5, pady=10)
-    entry2 = ttk.Entry(root)
-    entry2.grid(row=1, column=1, padx=5, pady=10)
-    entry3 = ttk.Entry(root)
-    entry3.grid(row=1, column=2, padx=5, pady=10)
-    entry4 = ttk.Entry(root)
-    entry4.grid(row=1, column=3, padx=5, pady=10)
-    entry5 = ttk.Entry(root)
-    entry5.grid(row=1, column=4, padx=5, pady=10)
-    entry6 = ttk.Entry(root)
-    entry6.grid(row=1, column=5, padx=5, pady=10)
-
-    # Create four buttons
-    button1 = ttk.Button(root, text="Add", command=add_clicked)
-    button1.grid(row=3, column=0, padx=7, pady=10)
-    button2 = ttk.Button(root, text="Update", command=update_clicked)
-    button2.grid(row=3, column=1, padx=7, pady=10)
-    button3 = ttk.Button(root, text="Delete", command=delete_clicked)
-    button3.grid(row=3, column=2, padx=7, pady=10)
-    button4 = ttk.Button(root, text="View", command=view_clicked)
-    button4.grid(row=3, column=3, padx=7, pady=10)
-
-
-    # Create a table to display data
+    combobox_label = ttk.Label(root, text="Applications:")
     global table
-    table = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6"), show='headings')
-    table.heading("col1", text="Column 1")
-    table.heading("col2", text="Column 2")
-    table.heading("col3", text="Column 3")
-    table.heading("col4", text="Column 4")
-    table.heading("col5", text="Column 5")
-    table.heading("col6", text="Column 6")
-    table.grid(row=4, column=0, columnspan=6, padx=10, pady=10)
+    # Create a table to display data
+    table = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"), show='headings')
+    table.heading("col1", text="Application ID")
+    table.column("col1", width=140, anchor="center")
+    table.heading("col2", text="Product ID")
+    table.column("col2", width=140, anchor="center")
+    table.heading("col3", text="Product Name")
+    table.column("col3", width=140, anchor="center")
+    table.heading("col4", text="Category Name")
+    table.column("col4", width=140, anchor="center")
+    table.heading("col5", text="Date")
+    table.column("col5", width=140, anchor="center")
+    table.heading("col6", text="Status")
+    table.column("col6", width=140, anchor="center")
+    table.heading("col7", text="Approve Button")
+    table.column("col7", width=140, anchor="center")
+    table.heading("col8", text="Deny Button")
+    table.column("col8", width=140, anchor="center")
+    table.grid(row=4, column=0, columnspan=4, padx=5, pady=10)
+    cursor.execute("""EXEC dbo.getApplicatonInfo""")
+    insert_data(cursor.fetchall())
+    table.bind("<Double-1>", click)
     pass
 
 def login_failure():
