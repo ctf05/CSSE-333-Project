@@ -485,7 +485,7 @@ def application_page():
     product_description_text = tk.Text(root, height=5, width=30)
     product_description_text.pack()
 
-    # TODO: add checking for phone input
+    # TODO: add checking for phone input and others
     def on_submit_click():
         product_name = product_name_entry.get()
         product_company = product_company_entry.get()
@@ -501,6 +501,10 @@ def application_page():
         print("Product Description:", product_description)
         print("Product Company Website:", product_company_website)
         print("Product Company Phone Number:" , product_company_phone)
+
+        if not check_phone_input():
+            return
+
         submit_application(product_name, product_company, product_category, product_price, product_description, product_company_phone, product_company_website)
 
     submit_button = tk.Button(root, text="Submit Application", command=on_submit_click)
@@ -511,6 +515,23 @@ def application_page():
 
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
     cancel_button.pack()
+
+def check_phone_input(phone):
+    if len(phone) != 12:
+        print("len fault")
+        return False
+    
+    for k in range(12):
+        if k == 3 or k == 7:
+            if not phone[k] == "-":
+                print("- fault")
+                return False
+        else:
+            if not phone[k].isdigit():
+                print("digit fault")
+                return False
+    
+    return True
 
 
 def cart_page(cid):
