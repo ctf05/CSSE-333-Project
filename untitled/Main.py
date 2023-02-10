@@ -158,7 +158,7 @@ def view_admin_product():
     product_forSale_entry.pack()
 
     def get_products():
-        cursor.execute("""Select * From Product""")
+        cursor.execute("""Exec dbo.ViewAllProducts""")
         
         products = cursor.fetchall()
         listbox.delete(0, tk.END)
@@ -270,18 +270,12 @@ def check_credentials():
 
     password = password_entry.get().encode()
 
-    cursor.execute("""
-        SELECT PasswordSalt
-        FROM Login
-        WHERE Username = ?""",(username_entry.get()))
+    cursor.execute("""Exec dbo.PasswordSaltFromUsername @uname = ?""", (username_entry.get()))
     try:
         password_salt = cursor.fetchone()[0].encode()
         password_hash = bcrypt.hashpw(password, password_salt)
 
-        cursor.execute("""
-                SELECT *
-                FROM Login
-                WHERE PasswordHash = ?""",(password_hash.decode()[0:49]))
+        cursor.execute("""Exec dbo.CheckPasswordHash @hash = ?""", (password_hash.decode()[0:49]))
         try:
             print(password_hash.decode()[0:49])
             user = cursor.fetchone()
@@ -330,9 +324,9 @@ def home_page(cid):
 
     def get_products(catName):
         if catName == None:
-            cursor.execute("""Select * From Product Where ForSale = 1""")
+            cursor.execute("""Exec dbo.AllProductsForSale""")
         else:
-            cursor.execute("""Select * From Product P Join Category C On P.CategoryID = C.CategoryID Where ForSale = 1 And C.Name = ?""", catName)
+            cursor.execute("""Exec dbo.ProductsWithCategory @cat = ?""", catName)
         
         products = cursor.fetchall()
         listbox.delete(0, tk.END)
@@ -344,7 +338,7 @@ def home_page(cid):
 
     get_products(None)
 
-    cursor.execute("""Select Name From Category""")
+    cursor.execute("""Exec dbo.AllCategories""")
     cats = cursor.fetchall()
     options = ["All"]
     for row in cats:
@@ -380,7 +374,7 @@ def open_product_page(productID,order):
     label = tk.Label(product_page, text="Product Details", font=("TkDefaultFont", 16))
     label.pack()
 
-    cursor.execute("""Select * From Product Where ProductID = ?""", productID)
+    cursor.execute("""Exec dbo.ProductFromID @pid = ?""", productID)
     product = cursor.fetchall()[0]
     print(product)
 
@@ -832,7 +826,7 @@ def cart_page(cid,order):
         def on_back_click():
             confirm_root.destroy()
             
-        ok_button = tk.Button(root, text="Ok", command=on_back_click)
+        ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
         ok_button.grid(row=2,column=0)
     
     def submit_order():
