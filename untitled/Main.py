@@ -289,9 +289,12 @@ def open_product_page(productID,order):
         amount_entry.pack()
         
         def display_error(stock):
+            error_root = tk.Tk()
+            error_root.title("ERROR")
+            error_root.geometry("250x200")
             
             error_message = "Not enough product in stock. ? remain in stock.".format(stock)
-            error = tk.Label(root, text="Not enough product in stock", font=("TkDefaultFont", 16))
+            error = tk.Label(error_root, text="Not enough product in stock", font=("TkDefaultFont", 16))
             error.pack()
             
             def on_back_click():
@@ -601,6 +604,19 @@ def cart_page(cid,order):
     address_entry = tk.Entry(root)
     address_entry.grid(row=3, column=1)
     
+    def confirm_order():
+        confirm_root = tk.Tk()
+        confirm_root.title("Success")
+        confirm_root.geometry("250x200")
+            
+        confirm = tk.Label(confirm_root, text="Order Placed", font=("TkDefaultFont", 16))
+        confirm.grid(row=0,column=0)
+            
+        def on_back_click():
+            confirm_root.destroy()
+            
+        ok_button = tk.Button(root, text="Ok", command=on_back_click)
+        ok_button.grid(row=2,column=0)
     
     def submit_order():
         address = address_entry.get()
@@ -610,6 +626,8 @@ def cart_page(cid,order):
         print(order_id)
         for item in order:
             cursor.execute("{CALL dbo.addToOrder (?,?,?)}",(order_id,item[0],item[1]))
+            
+        confirm_order()
             
     def on_back_click():
         root.destroy()
