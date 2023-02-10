@@ -168,6 +168,7 @@ def view_admin_product():
         listbox.pack()    
 
     def update_products():
+        sTitle = "Product Update"
         price = product_price_entry.get()
         stock = product_stock_entry.get()
         forSale = product_forSale_entry.get()
@@ -187,13 +188,13 @@ def view_admin_product():
             try:
                 float(price)
             except:
-                print("price bad")
+                status_page(sTitle, "Price is not a number")
                 return
 
         if stock == None or stock.isdigit():
             print("stock is good")
         else:
-             print("stock bad")
+             status_page(sTitle, "Stock is not a number")
              return
         
         if forSale == None:
@@ -203,25 +204,31 @@ def view_admin_product():
         elif forSale.lower() == "false":
             forSale = 0
         else:
-            print("For sale bad")
+            status_page(sTitle, "Please make a valid input for 'For Sale'.\n Valid inputs are: True or False")
             return
 
         if len(listbox.curselection()) == 0:
-            print("no selection")
+            status_page(sTitle, "Please make a selection before submitting")
             return
 
         csIndex = listbox.curselection()[0]
         productInfo = listbox.get(csIndex).split(",")
         pid = productInfo[0][1:]
         
-        cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
-        get_products()
+        try:
+            cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
+            get_products()
 
-        if stock != None or price != None or forSale != None:
-            product_forSale_entry.delete(0, tk.END)
-            product_price_entry.delete(0, tk.END)
-            product_stock_entry.delete(0, tk.END)
-            status_page("Product Update", "Update Success")
+            if stock != None or price != None or forSale != None:
+                product_forSale_entry.delete(0, tk.END)
+                product_price_entry.delete(0, tk.END)
+                product_stock_entry.delete(0, tk.END)
+                status_page(sTitle, "Update Success")
+                product_price_entry.delete(0, tk.END)
+                product_forSale_entry.delete(0, tk.END)
+                product_stock_entry.delete(0, tk.END)
+        except:
+            status_page(sTitle, "Error updating products")
         
 
     submit_button = tk.Button(root, text="Submit", command=update_products)
@@ -638,13 +645,62 @@ def SubmitRegister():
     password_salt = bcrypt.gensalt()
     password_hash = bcrypt.hashpw(password.encode('utf8'), password_salt)
 
+    title = "Register User"
+
+    if username == "" or password == "" or first_name == "" or last_name == "" or address == "" or phone == "" or card == "" or expiration == "" or security == "" or card_type == "":
+        status_page(title, "Please fill out all inputs")
+        return
+
+    if not check_phone_input(phone):
+        status_page(title, "Please enter vaild input for phone number: input as xxx-xxx-xxxx")
+        return
+
+    if len(card) != 16 or not card.isnumeric():
+        status_page(title, "Invalid input for Card Number")
+        return
+
+    if len(security) != 3 or not security.isnumeric():
+        status_page(title, "Security Code is not a 3 digit number")
+        return
+    
+    if not check_date(expiration):
+        status_page(title, "Please format exirpation date as: year-month-day, xxxx-xx-xx")
+        return    
+
     try:
         cursor.execute("EXEC dbo.RegisterUser @UserName = ?, @PasswordSalt = ?, @PasswordHash = ?, @Address = ?, "
                        "@FName = ?, @LName = ?, @Phone = ?, @CardType = ?, @CardNumber = ?, @ExperationDate = ?, @SecurityCode = ?",
                        (username, password_salt.decode(), password_hash.decode()[0:49], address, first_name, last_name, phone, card_type,
                         card, expiration, security))
+        status_page(title, "Registration Success")
+        username = username_entry.delete(0, tk.END)
+        password = password_entry.delete(0, tk.END)
+        first_name = first_name_entry.delete(0, tk.END)
+        last_name = last_name_entry.delete(0, tk.END)
+        address = address_entry.delete(0, tk.END)
+        phone = phone_entry.delete(0, tk.END)
+        card = card_entry.delete(0, tk.END)
+        expiration = expiration_entry.delete(0, tk.END)
+        security = security_entry.delete(0, tk.END)
+        card_type = card_type_entry.delete(0, tk.END)
     except:
-        print("error")
+        status_page(title, "Error Registering User")
+
+
+def check_date(date):
+    if len(date) != 10:
+        return False
+    
+    for k in range(10):
+        if k == 4 or k == 7:
+            if not date[k] == "-":
+                return False
+        else:
+            if not date[k].isdigit():
+                return False
+    
+    return True
+
 
 def application_page():
     root = tk.Tk()
