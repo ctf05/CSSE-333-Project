@@ -165,22 +165,7 @@ def view_admin_product():
         
         for product in products:
             listbox.insert(tk.END, product)
-        listbox.pack()
-
-    def update_success_page():       
-
-        confirm_root = tk.Tk()
-        confirm_root.title("Success")
-        confirm_root.geometry("250x200")
-            
-        confirm = tk.Label(confirm_root, text="Update Success", font=("TkDefaultFont", 16))
-        confirm.grid(row=0,column=0)
-            
-        def on_back_click():
-            confirm_root.destroy()
-            
-        ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
-        ok_button.grid()
+        listbox.pack()    
 
     def update_products():
         price = product_price_entry.get()
@@ -200,7 +185,7 @@ def view_admin_product():
             print("price is good")
         else:
             try:
-                float(stock)
+                float(price)
             except:
                 print("price bad")
                 return
@@ -236,7 +221,7 @@ def view_admin_product():
             product_forSale_entry.delete(0, tk.END)
             product_price_entry.delete(0, tk.END)
             product_stock_entry.delete(0, tk.END)
-            update_success_page()
+            status_page("Product Update", "Update Success")
         
 
     submit_button = tk.Button(root, text="Submit", command=update_products)
@@ -244,7 +229,19 @@ def view_admin_product():
 
     get_products()
 
-    
+def status_page(title, message): 
+    confirm_root = tk.Tk()
+    confirm_root.title(title)
+    confirm_root.geometry("250x200")
+        
+    confirm = tk.Label(confirm_root, text=message, font=("TkDefaultFont", 16))
+    confirm.grid(row=0,column=0)
+        
+    def on_back_click():
+        confirm_root.destroy()
+        
+    ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
+    ok_button.grid() 
 
 
 def login_failure():
@@ -466,9 +463,56 @@ def open_product_page(productID,order):
     
     
 
-def submit_application(product_name, product_company, product_category, product_price, product_description,  product_company_phone, product_company_website):
-    cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
-    (product_name, product_category, product_company, product_description, product_price, product_company_phone, product_company_website))
+def submit_application(name, company, category, price, description, phone, website):
+    
+    title = "Application"
+
+    if name == "" or company == "" or category == "" or price == "" or description == "" or phone == "" or website == "":
+        status_page(title, "Please fill out all input fields")
+        return False
+    
+    if price.isnumeric():
+        print("price is good")
+    else:
+        try:
+            float(price)
+        except:
+            status_page(title, "Price Input is not a number")
+            return False
+
+    if not check_phone_input(phone):
+        status_page(title, "Incorrect Phone Input, please input as: xxx-xxx-xxxx")
+        return False
+
+    try:
+        cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
+        (name, category, company, description, price, phone, website))
+
+        status_page(title, "Application Successfully Submited")
+        return True
+    except:
+        status_page(title, "Error Submitting Application")
+        return False    
+
+
+
+def check_phone_input(phone):
+    if len(phone) != 12:
+        print("len fault")
+        return False
+    
+    for k in range(12):
+        if k == 3 or k == 7:
+            if not phone[k] == "-":
+                print("- fault")
+                return False
+        else:
+            if not phone[k].isdigit():
+                print("digit fault")
+                return False
+    
+    return True
+
 
 def registration_page():
     root = tk.Tk()
@@ -669,10 +713,16 @@ def application_page():
         print("Product Company Website:", product_company_website)
         print("Product Company Phone Number:" , product_company_phone)
 
-        if not check_phone_input():
-            return
+        status = submit_application(product_name, product_company, product_category, product_price, product_description, product_company_phone, product_company_website)
 
-        submit_application(product_name, product_company, product_category, product_price, product_description, product_company_phone, product_company_website)
+        if status:
+            product_name = product_name_entry.delete(0, tk.END)
+            product_company = product_company_entry.delete(0, tk.END)
+            product_category = product_category_entry.delete(0, tk.END)
+            product_price = product_price_entry.delete(0, tk.END)
+            product_description = product_description_text.delete(1.0, tk.END)
+            product_company_website = product_company_website_entry.delete(0, tk.END)
+            product_company_phone = product_company_phone_entry.delete(0, tk.END)
 
     submit_button = tk.Button(root, text="Submit Application", command=on_submit_click)
     submit_button.pack()
@@ -682,23 +732,6 @@ def application_page():
 
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
     cancel_button.pack()
-
-def check_phone_input(phone):
-    if len(phone) != 12:
-        print("len fault")
-        return False
-    
-    for k in range(12):
-        if k == 3 or k == 7:
-            if not phone[k] == "-":
-                print("- fault")
-                return False
-        else:
-            if not phone[k].isdigit():
-                print("digit fault")
-                return False
-    
-    return True
 
 
 def cart_page(cid,order):
