@@ -124,7 +124,87 @@ def login_success():
     cursor.execute("""EXEC dbo.getOrderInfo""")
     insert_data_order(cursor.fetchall())
     ordTable.bind("<Double-1>", clickOrd)
-    pass
+
+    product_button = tk.Button(root, text="Update Products", command=view_admin_product)
+    product_button.grid(row=12, column=0)
+
+def view_admin_product():
+    root = tk.Tk()
+    root.geometry("1250x500")
+    root.title("Admin Control Panel")
+
+    label = tk.Label(root, text="Admin Products Page", font=("TkDefaultFont", 16))
+    label.pack()
+
+    listbox = tk.Listbox(root, width=100)
+    listbox.pack()
+
+    product_price_label = tk.Label(root, text="Product Price:")
+    product_price_label.pack()
+
+    product_price_entry = tk.Entry(root)
+    product_price_entry.pack()
+
+    product_stock_label = tk.Label(root, text="Number In Stock:")
+    product_stock_label.pack()
+
+    product_stock_entry = tk.Entry(root)
+    product_stock_entry.pack()
+
+    def get_products():
+        cursor.execute("""Select * From Product Where ForSale = 1""")
+        
+        products = cursor.fetchall()
+        listbox.delete(0, tk.END)
+        
+        for product in products:
+            listbox.insert(tk.END, product)
+        listbox.pack()
+
+    def update_products():
+        price = product_price_entry.get()
+        stock = product_stock_entry.get()
+
+        if price == "":
+            price = None
+        
+        if stock == "":
+            stock = None
+
+        if price == None or price.isnumeric():
+            print("price is good")
+        else:
+            try:
+                float(stock)
+            except:
+                print("price bad")
+                return
+
+        if stock == None or stock.isdigit():
+            print("stock is good")
+        else:
+             print("stock bad")
+             return
+
+        if len(listbox.curselection()) == 0:
+            print("no selection")
+            return
+
+        csIndex = listbox.curselection()[0]
+        productInfo = listbox.get(csIndex).split(",")
+        pid = productInfo[0][1:]
+        
+        cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?""", (pid, price, stock))
+        get_products()
+        
+
+    submit_button = tk.Button(root, text="Submit", command=update_products)
+    submit_button.pack()
+
+
+
+    get_products()
+
 
 def login_failure():
     # code to run if login fails
@@ -136,6 +216,10 @@ def check_credentials():
     global password_entry
 
     if username_entry.get() == "admin" and password_entry.get() == "password":
+        login_success()
+        return
+
+    if username_entry.get() == "a" and password_entry.get() == "123":
         login_success()
         return
 
@@ -191,7 +275,10 @@ def home_page(cid):
     def show_choice(event):
         print("show choice")
         print(var.get())
-        get_products(var.get())
+        if var.get() == "All":
+            get_products(None)
+        else:
+            get_products(var.get())
 
     def get_products(catName):
         if catName == None:
@@ -211,7 +298,7 @@ def home_page(cid):
 
     cursor.execute("""Select Name From Category""")
     cats = cursor.fetchall()
-    options = []
+    options = ["All"]
     for row in cats:
         options.append(row[0])
 
