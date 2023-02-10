@@ -255,6 +255,9 @@ def home_page(cid):
     root = tk.Tk()
     root.title("Home Page")
     root.geometry("1250x500")
+    
+    global order 
+    order = []
 
     global products
     products = []
@@ -263,7 +266,7 @@ def home_page(cid):
         print("go to product")
         csIndex = listbox.curselection()[0]
         pid = listbox.get(csIndex).split(",")[0][1:]
-        open_product_page(pid)
+        open_product_page(pid,order)
 
     label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
     label.pack()
@@ -309,15 +312,22 @@ def home_page(cid):
     dropdown.pack()
 
     def view_cart_page():
-        cart_page(cid)
+        cart_page(cid,order)
+        
+    def view_order_page():
+        order_page(cid)
+
 
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack()
 
     cart_button = tk.Button(root, text="View Cart", command=view_cart_page)
     cart_button.pack()
+    
+    order_button = tk.Button(root, text="View Orders", command=view_order_page)
+    order_button.pack()
 
-def open_product_page(productID):
+def open_product_page(productID,order):
     product_page = tk.Tk()
     product_page.title("Product Details")
     product_page.geometry("1250x500")
@@ -353,12 +363,67 @@ def open_product_page(productID):
     product_description_label.pack()
     product_description_display = tk.Label(product_page, text=product[9])
     product_description_display.pack()
+    
+    def add_to_order():
+        root = tk.Tk()
+        root.title("Confirmation Window")
+        root.geometry("500x100")
+        
+        form_label = tk.Label(root, text="How many would you like to purchase", font=("TkDefaultFont", 12))
+        form_label.pack()
+        
+        amount_entry = tk.Entry(root)
+        amount_entry.pack()
+        
+        def display_error(stock):
+            error_root = tk.Tk()
+            error_root.title("ERROR")
+            error_root.geometry("250x200")
+            
+            error_message = "Not enough product in stock. ? remain in stock.".format(stock)
+            error = tk.Label(error_root, text="Not enough product in stock", font=("TkDefaultFont", 16))
+            error.pack()
+            
+            def on_back_click():
+                root.destroy()
+            
+            cancel_button = tk.Button(root, text="Close", command=on_back_click)
+            cancel_button.pack()
 
+        def add():
+            amount = amount_entry.get()
+            
+            cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(productID))
+            stock = (cursor.fetchone())[2]
+            
+            if(int(amount)>int(stock)):
+                display_error(stock)
+            else:
+                print(amount)
+                order.append([productID,amount])
+                root.destroy()
+            
+        def on_back_click():
+            root.destroy()
+    
+        confirm_button = tk.Button(root,text="Confirm", command=add)
+        confirm_button.pack()
+        
+        cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+        cancel_button.pack()
+              
     def on_back_click():
         product_page.destroy()
 
+
+    add_button = tk.Button(product_page,text="Add To Order", command=add_to_order)
+    add_button.pack()  
+    
     back_button = tk.Button(product_page, text="Back", command=on_back_click)
     back_button.pack()
+    
+    
+    
 
 def submit_application(product_name, product_company, product_category, product_price, product_description,  product_company_phone, product_company_website):
     cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
@@ -595,9 +660,75 @@ def check_phone_input(phone):
     return True
 
 
-def cart_page(cid):
+def cart_page(cid,order):
     root = tk.Tk()
-    root.title("Products in cart")
+    root.title("Cart")
+    root.geometry("750x500")
+    
+    pad_label = tk.Label(root, text="       ", font=("TkDefaultFont", 16))
+    pad_label.grid(row=0, column=0)
+    
+    form_label = tk.Label(root, text="Review order", font=("TkDefaultFont", 16))
+    form_label.grid(row=0, column=1)
+    
+    order_label = tk.Label(root, text="Product, Amount, Price", font=("TkDefaultFont", 10))
+    order_label.grid(row=1, column=1,sticky='W')
+    
+    item_listbox = tk.Listbox(root, width=100, selectmode = 'single')
+    
+    for item in order:
+        
+        cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(item[0]))
+        product = cursor.fetchone()
+        prod_name = product[0]
+        price = int(item[1])*int(product[1])
+        
+        item_string = "    {},    {},    {}".format(prod_name,item[1],price)
+        item_listbox.insert(tk.END, item_string)
+    item_listbox.grid(row=2, column=1)
+    
+    
+    address_entry = tk.Entry(root)
+    address_entry.grid(row=3, column=1)
+    
+    def confirm_order():
+        confirm_root = tk.Tk()
+        confirm_root.title("Success")
+        confirm_root.geometry("250x200")
+            
+        confirm = tk.Label(confirm_root, text="Order Placed", font=("TkDefaultFont", 16))
+        confirm.grid(row=0,column=0)
+            
+        def on_back_click():
+            confirm_root.destroy()
+            
+        ok_button = tk.Button(root, text="Ok", command=on_back_click)
+        ok_button.grid(row=2,column=0)
+    
+    def submit_order():
+        address = address_entry.get()
+        
+        cursor.execute("""SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @ShipAddress = ?,@OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",(cid,address))
+        order_id = (cursor.fetchone())[0]
+        print(order_id)
+        for item in order:
+            cursor.execute("{CALL dbo.addToOrder (?,?,?)}",(order_id,item[0],item[1]))
+            
+        confirm_order()
+            
+    def on_back_click():
+        root.destroy()
+    
+    
+    submit_button = tk.Button(root,text="Place order",command=submit_order)
+    submit_button.grid(row=4, column=1)
+    
+    cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+    cancel_button.grid(row=6, column=1)   
+
+def order_page(cid):
+    root = tk.Tk()
+    root.title("Current Orders")
     root.geometry("750x500")
     
     pad_label = tk.Label(root, text="       ", font=("TkDefaultFont", 16))
