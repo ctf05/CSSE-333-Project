@@ -24,34 +24,54 @@ global card_entry
 global expiration_entry
 global security_entry
 global card_type_entry
-global table
+global appTable
+global ordTable
 
 def click(event):
-    print(event) #25 45 65 85
-    maxRange = len(table.item(table.selection())['values'])
+    maxRange = len(appTable.item(appTable.selection())['values'])
     for i in range(0, maxRange):
         y = event.y
         if (y >= (25 + (i * 20)) and y <= (45 + (i * 20))):
             x = event.x
-            applicationID = table.item(table.selection())['values'][0]
-            productID = table.item(table.selection())['values'][1]
+            applicationID = appTable.item(appTable.selection())['values'][0]
+            productID = appTable.item(appTable.selection())['values'][1]
             if (x >= 981):
                 cursor.execute("""EXEC dbo.DenyApplication @AppId = ?, @ProdId = ?""", (applicationID, productID))
-            else:
+            elif (x >= 840):
                 cursor.execute("""EXEC dbo.ApproveApplication @AppID = ?, @ProdId = ?""", (applicationID, productID))
     cursor.execute("""EXEC dbo.getApplicatonInfo""")
     insert_data(cursor.fetchall())
 
+def clickOrd(event):
+    maxRange = len(ordTable.item(ordTable.selection())['values'])
+    for i in range(0, maxRange):
+        y = event.y
+        x = event.x
+        if (y >= (25 + (i * 20)) and y <= (45 + (i * 20)) and x >= 700 and x <= 840):
+            orderID = ordTable.item(ordTable.selection())['values'][0]
+            cursor.execute("""EXEC dbo.ShipOrder @ID = ?""", (orderID))
+    cursor.execute("""EXEC dbo.getOrderInfo""")
+    insert_data_order(cursor.fetchall())
+
 
 def insert_data(data_list):
-    global table
-    for item in table.get_children():
-        table.delete(item)
+    global appTable
+    for item in appTable.get_children():
+        appTable.delete(item)
     i = 0
     for row in data_list:
         # if (row[5] != "Pending"):
         #     continue
-        table.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], "~ Approve ~", "~ Deny ~"))
+        appTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], "~ Approve ~", "~ Deny ~"))
+        i += 1
+
+def insert_data_order(data_list):
+    global ordTable
+    for item in ordTable.get_children():
+        ordTable.delete(item)
+    i = 0
+    for row in data_list:
+        ordTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], "~ Ship ~"))
         i += 1
 
 def login_success():
@@ -62,29 +82,48 @@ def login_success():
     # Create a dropdown menu
     global combobox
     combobox_label = ttk.Label(root, text="Applications:")
-    global table
+    global appTable
+    global ordTable
     # Create a table to display data
-    table = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"), show='headings')
-    table.heading("col1", text="Application ID")
-    table.column("col1", width=140, anchor="center")
-    table.heading("col2", text="Product ID")
-    table.column("col2", width=140, anchor="center")
-    table.heading("col3", text="Product Name")
-    table.column("col3", width=140, anchor="center")
-    table.heading("col4", text="Category Name")
-    table.column("col4", width=140, anchor="center")
-    table.heading("col5", text="Date")
-    table.column("col5", width=140, anchor="center")
-    table.heading("col6", text="Status")
-    table.column("col6", width=140, anchor="center")
-    table.heading("col7", text="Approve Button")
-    table.column("col7", width=140, anchor="center")
-    table.heading("col8", text="Deny Button")
-    table.column("col8", width=140, anchor="center")
-    table.grid(row=4, column=0, columnspan=4, padx=5, pady=10)
+    appTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"), show='headings')
+    appTable.heading("col1", text="Application ID")
+    appTable.column("col1", width=140, anchor="center")
+    appTable.heading("col2", text="Product ID")
+    appTable.column("col2", width=140, anchor="center")
+    appTable.heading("col3", text="Product Name")
+    appTable.column("col3", width=140, anchor="center")
+    appTable.heading("col4", text="Category Name")
+    appTable.column("col4", width=140, anchor="center")
+    appTable.heading("col5", text="Date")
+    appTable.column("col5", width=140, anchor="center")
+    appTable.heading("col6", text="ShippedData")
+    appTable.column("col6", width=140, anchor="center")
+    appTable.heading("col7", text="Approve Button")
+    appTable.column("col7", width=140, anchor="center")
+    appTable.heading("col8", text="Deny Button")
+    appTable.column("col8", width=140, anchor="center")
+    appTable.grid(row=10, column=0, columnspan=4, padx=5, pady=10)
     cursor.execute("""EXEC dbo.getApplicatonInfo""")
     insert_data(cursor.fetchall())
-    table.bind("<Double-1>", click)
+    appTable.bind("<Double-1>", click)
+
+    ordTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col7"), show='headings')
+    ordTable.heading("col1", text="Order ID")
+    ordTable.column("col1", width=140, anchor="center")
+    ordTable.heading("col2", text="Customer ID")
+    ordTable.column("col2", width=140, anchor="center")
+    ordTable.heading("col3", text="Date Name")
+    ordTable.column("col3", width=140, anchor="center")
+    ordTable.heading("col4", text="Address")
+    ordTable.column("col4", width=140, anchor="center")
+    ordTable.heading("col5", text="ShipDate")
+    ordTable.column("col5", width=140, anchor="center")
+    ordTable.heading("col7", text="Ship Button")
+    ordTable.column("col7", width=140, anchor="center")
+    ordTable.grid(row=12, column=1, columnspan=4, padx=5, pady=10)
+    cursor.execute("""EXEC dbo.getOrderInfo""")
+    insert_data_order(cursor.fetchall())
+    ordTable.bind("<Double-1>", clickOrd)
     pass
 
 def login_failure():
