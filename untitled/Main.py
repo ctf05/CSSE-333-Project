@@ -151,8 +151,14 @@ def view_admin_product():
     product_stock_entry = tk.Entry(root)
     product_stock_entry.pack()
 
+    product_forSale_label = tk.Label(root, text="For Sale:")
+    product_forSale_label.pack()
+
+    product_forSale_entry = tk.Entry(root)
+    product_forSale_entry.pack()
+
     def get_products():
-        cursor.execute("""Select * From Product Where ForSale = 1""")
+        cursor.execute("""Select * From Product""")
         
         products = cursor.fetchall()
         listbox.delete(0, tk.END)
@@ -161,9 +167,28 @@ def view_admin_product():
             listbox.insert(tk.END, product)
         listbox.pack()
 
+    def update_success_page():       
+
+        confirm_root = tk.Tk()
+        confirm_root.title("Success")
+        confirm_root.geometry("250x200")
+            
+        confirm = tk.Label(confirm_root, text="Update Success", font=("TkDefaultFont", 16))
+        confirm.grid(row=0,column=0)
+            
+        def on_back_click():
+            confirm_root.destroy()
+            
+        ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
+        ok_button.grid()
+
     def update_products():
         price = product_price_entry.get()
         stock = product_stock_entry.get()
+        forSale = product_forSale_entry.get()
+
+        if forSale == "":
+            forSale = None
 
         if price == "":
             price = None
@@ -185,6 +210,16 @@ def view_admin_product():
         else:
              print("stock bad")
              return
+        
+        if forSale == None:
+            print("For Sale good")
+        elif forSale.lower() == "true":
+            forSale = 1
+        elif forSale.lower() == "false":
+            forSale = 0
+        else:
+            print("For sale bad")
+            return
 
         if len(listbox.curselection()) == 0:
             print("no selection")
@@ -194,16 +229,22 @@ def view_admin_product():
         productInfo = listbox.get(csIndex).split(",")
         pid = productInfo[0][1:]
         
-        cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?""", (pid, price, stock))
+        cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
         get_products()
+
+        if stock != None or price != None or forSale != None:
+            product_forSale_entry.delete(0, tk.END)
+            product_price_entry.delete(0, tk.END)
+            product_stock_entry.delete(0, tk.END)
+            update_success_page()
         
 
     submit_button = tk.Button(root, text="Submit", command=update_products)
     submit_button.pack()
 
-
-
     get_products()
+
+    
 
 
 def login_failure():
