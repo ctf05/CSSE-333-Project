@@ -133,6 +133,137 @@ def view_admin_product():
     root.geometry("1250x500")
     root.title("Admin Control Panel")
 
+    label = ttk.Label(root, text="Admin Products Page", font=("TkDefaultFont", 14, "bold"))
+    label.pack(pady=10)
+
+    pTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7"), show="headings")
+    pTable.heading("col1", text="Product ID")
+    pTable.column("col1", width=140, anchor="center")
+    pTable.heading("col2", text="Name")
+    pTable.column("col2", width=140, anchor="center")
+    pTable.heading("col3", text="Supplier")
+    pTable.column("col3", width=140, anchor="center")
+    pTable.heading("col4", text="Category")
+    pTable.column("col4", width=140, anchor="center")
+    pTable.heading("col5", text="Price")
+    pTable.column("col5", width=140, anchor="center")
+    pTable.heading("col6", text="Stock Level")
+    pTable.column("col6", width=140, anchor="center")
+    pTable.heading("col7", text="For Sale")
+    pTable.column("col7", width=140, anchor="center")
+    pTable.pack(pady=10)
+
+    def insert_data_home(data_list):
+        for item in pTable.get_children():
+            pTable.delete(item)
+        for row in data_list:
+            pTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+    
+    def get_products():    
+        cursor.execute("""Exec dbo.AdminViewProducts""")
+        
+        data_list = cursor.fetchall()
+        pids = []
+        insert_data_home(data_list)
+    
+    get_products()
+
+    frame = ttk.Frame(root)
+    frame.pack(pady=10)
+
+    price_label = ttk.Label(frame, text="Product Price:")
+    price_label.pack(side="left", padx=10)
+
+    price_entry = ttk.Entry(frame)
+    price_entry.pack(side="left", padx=10)
+
+    stock_label = ttk.Label(frame, text="Stock Level:")
+    stock_label.pack(side="left", padx=10)
+
+    stock_entry = ttk.Entry(frame)
+    stock_entry.pack(side="left", padx=10)
+
+    for_sale_label = ttk.Label(frame, text="For Sale:")
+    for_sale_label.pack(side="left", padx=10)
+
+    for_sale_entry = ttk.Entry(frame)
+    for_sale_entry.pack(side="left", padx=10)
+
+    def update_products():
+        sTitle = "Product Update"
+        price = price_entry.get()
+        stock = stock_entry.get()
+        forSale = for_sale_entry.get()
+
+        if forSale == "":
+            forSale = None
+
+        if price == "":
+            price = None
+        
+        if stock == "":
+            stock = None
+
+        if price == None or price.isnumeric():
+            print("price is good")
+        else:
+            try:
+                float(price)
+            except:
+                status_page(sTitle, "Price is not a number")
+                return
+
+        if stock == None or stock.isdigit():
+            print("stock is good")
+        else:
+             status_page(sTitle, "Stock is not a number")
+             return
+        
+        if forSale == None:
+            print("For Sale good")
+        elif forSale.lower() == "true" or forSale == "1":
+            forSale = 1
+        elif forSale.lower() == "false" or forSale == "0":
+            forSale = 0
+        else:
+            status_page(sTitle, "Please make a valid input for 'For Sale'.\n Valid inputs are: True or False")
+            return
+
+        sel = pTable.selection()
+        if len(sel) == 0:
+            status_page(sTitle, "Please make a selection before submitting")
+            return
+
+        # item = pTable.item(sel[0])
+        # pid = item.get('values')[0]
+        
+        try:
+            for k in range(len(sel)):
+                item = pTable.item(sel[k])
+                pid = item.get('values')[0]
+                cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
+            
+            get_products()
+
+            if stock != None or price != None or forSale != None:
+                for_sale_entry.delete(0, tk.END)
+                price_entry.delete(0, tk.END)
+                stock_entry.delete(0, tk.END)
+                status_page(sTitle, "Update Success")
+        except:
+            status_page(sTitle, "Error updating products")        
+
+    submit_button = ttk.Button(root, text="Submit", command=update_products)
+    submit_button.pack(pady=10)
+
+    close_button = ttk.Button(root, text="Close", command=root.destroy)
+    close_button.pack(pady=10)
+
+def view_admin_product_old():
+    root = tk.Tk()
+    root.geometry("1250x500")
+    root.title("Admin Control Panel")
+
     label = tk.Label(root, text="Admin Products Page", font=("TkDefaultFont", 16))
     label.pack()
 
@@ -290,65 +421,17 @@ def check_credentials():
         login_failure()
 
 
+
 def home_page(cid):
     root = tk.Tk()
-    root.title("Home Page")
     root.geometry("1250x500")
-    
+    root.title("Home Page")
+
     global order 
     order = []
 
-    global products
-    products = []
-
-    def go_to_product(event):
-        print("go to product")
-        csIndex = listbox.curselection()[0]
-        pid = listbox.get(csIndex).split(",")[0][1:]
-        open_product_page(pid,order)
-
-    label = tk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 16))
-    label.pack()
-    
-    listbox = tk.Listbox(root, width=100)
-    listbox.pack()   
-
-
-    def show_choice(event):
-        print("show choice")
-        print(var.get())
-        if var.get() == "All":
-            get_products(None)
-        else:
-            get_products(var.get())
-
-    def get_products(catName):
-        if catName == None:
-            cursor.execute("""Exec dbo.AllProductsForSale""")
-        else:
-            cursor.execute("""Exec dbo.ProductsWithCategory @cat = ?""", catName)
-        
-        products = cursor.fetchall()
-        listbox.delete(0, tk.END)
-        
-        for product in products:
-            listbox.insert(tk.END, product)
-        listbox.bind("<Double-1>", go_to_product)
-        listbox.pack()
-
-    get_products(None)
-
-    cursor.execute("""Exec dbo.AllCategories""")
-    cats = cursor.fetchall()
-    options = ["All"]
-    for row in cats:
-        options.append(row[0])
-
-    var = tk.StringVar()
-    var.set(options[0]) # default value
-
-    dropdown = tk.OptionMenu(root, var, *options, command=show_choice)
-    dropdown.pack()
+    global pids
+    pids = []
 
     def view_cart_page():
         cart_page(cid,order)
@@ -356,17 +439,95 @@ def home_page(cid):
     def view_order_page():
         order_page(cid)
 
+    # Create a dropdown menu
+    label = ttk.Label(root, text="Welcome to One Product", font=("TkDefaultFont", 14, "bold"))
+    label.pack(pady=10)
 
-    close_button = tk.Button(root, text="Close", command=root.destroy)
-    close_button.pack()
+    cursor.execute("""Exec dbo.AllCategories""")
+    cats = cursor.fetchall()
+    options = ["All", "All"]
+    for row in cats:
+        options.append(row[0])
 
-    cart_button = tk.Button(root, text="View Cart", command=view_cart_page)
-    cart_button.pack()
-    
-    order_button = tk.Button(root, text="View Orders", command=view_order_page)
-    order_button.pack()
+    var = tk.StringVar(root)
+    var.set(options[0])
 
-def open_product_page(productID,order):
+    def update_option(event):
+        var.set(event)
+        print(var.get())
+        if var.get() == "All":
+            get_products(None)
+        else:
+            get_products(var.get())
+
+    frame = ttk.Frame(root)
+    frame.pack(pady=10)
+
+    dropdown = ttk.OptionMenu(frame, var, *options, command=update_option)
+    dropdown.pack(side="left")
+
+    order_button = ttk.Button(frame, text="View Orders", command=view_order_page)
+    order_button.pack(side="left", padx=10)
+
+    cart_button = ttk.Button(frame, text="View Cart", command=view_cart_page)
+    cart_button.pack(side="left")
+
+    # Create a table to display data
+    pTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4"), show='headings')
+    # pTable.heading("col1", text="Product ID")
+    # pTable.column("col1", width=140, anchor="center")
+    pTable.heading("col1", text="Name")
+    pTable.column("col1", width=140, anchor="center")
+    pTable.heading("col2", text="Category")
+    pTable.column("col2", width=140, anchor="center")
+    pTable.heading("col3", text="Price")
+    pTable.column("col3", width=140, anchor="center")
+    pTable.heading("col4", text="Quantity")
+    pTable.column("col4", width=140, anchor="center")
+    pTable.pack(pady=10)
+    # pTable.grid(row=10, column=0, columnspan=4, padx=5, pady=10)
+    # cursor.execute("""EXEC dbo.AllProductsForSale""")
+
+    def insert_data_home(data_list):
+        for item in pTable.get_children():
+            pTable.delete(item)
+        for row in data_list:
+            pTable.insert("", tk.END, values=(row[1], row[2], row[3], row[4]))
+            pids.append(row[0])
+
+    # data_list = cursor.fetchall()
+    # pids = []
+    # insert_data_home(data_list)
+
+    def get_products(catName):
+        if catName == None:
+            cursor.execute("""Exec dbo.AllProductsForSale""")
+        else:
+            cursor.execute("""Exec dbo.ProductsWithCategory @cat = ?""", catName)
+        
+        data_list = cursor.fetchall()
+        pids = []
+        insert_data_home(data_list)
+
+    get_products(None)
+
+    def go_to_product(event):
+        selected_item = pTable.selection()
+        # test = pTable.item(selected_item[0])
+        index = pTable.index(selected_item[0])
+        pid = pids[index]
+        open_product_page(pid, order)
+        # csIndex = listbox.curselection()[0]
+        # pid = listbox.get(csIndex).split(",")[0][1:]
+        # open_product_page(pid, order)
+
+    pTable.bind("<Double-1>", go_to_product)
+
+    close_button = ttk.Button(root, text="Close", command=root.destroy)
+    close_button.pack(pady=10)
+
+
+def open_product_page(productID, order):
     product_page = tk.Tk()
     product_page.title("Product Details")
     product_page.geometry("1250x500")
