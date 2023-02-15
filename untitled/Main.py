@@ -822,7 +822,7 @@ def registration_page():
     password_label = tk.Label(root, text="Password")
     password_label.grid(row=1, column=0, padx=10, pady=10)
     # Create an input box for the password
-    password_entry = tk.Entry(root)
+    password_entry = tk.Entry(root, show="*")
     password_entry.grid(row=1, column=1, padx=10, pady=10)
     # Create a label for the first name input box
     first_name_label = tk.Label(root, text="First Name")
