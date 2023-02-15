@@ -528,6 +528,118 @@ def home_page(cid):
 
 
 def open_product_page(productID, order):
+    root = tk.Tk()
+    root.title("Product Details")
+    root.geometry("800x600")
+
+    cursor.execute("""Exec dbo.ProductFromID @pid = ?""", productID)
+    data_list = cursor.fetchone()
+    print(data_list)
+
+    label = ttk.Label(root, text=data_list[0], font=("Arial", 18, "bold"))
+    label.pack(pady=10)
+
+    # create frame to hold widgets
+    frame = tk.Frame(root)
+    frame.pack(pady=10)
+
+    # create labels and text boxes for product details
+    company_label = tk.Label(frame, text="Company:", font=("Arial", 13))
+    company_label.grid(row=0, column=0, padx=5, pady=5)
+    company_text = tk.Text(frame, height=1, width=20, font=("Arial", 13))
+    company_text.grid(row=0, column=1, padx=5, pady=5)
+
+    category_label = tk.Label(frame, text="Category:", font=("Arial", 13))
+    category_label.grid(row=1, column=0, padx=5, pady=5)
+    category_text = tk.Text(frame, height=1, width=20, font=("Arial", 13))
+    category_text.grid(row=1, column=1, padx=5, pady=5)
+
+    price_label = tk.Label(frame, text="Price:", font=("Arial", 13))
+    price_label.grid(row=2, column=0, padx=5, pady=5)
+    price_text = tk.Text(frame, height=1, width=20, font=("Arial", 13))
+    price_text.grid(row=2, column=1, padx=5, pady=5)
+
+    quantity_label = tk.Label(frame, text="Quantity:", font=("Arial", 13))
+    quantity_label.grid(row=3, column=0, padx=5, pady=5)
+    quantity_text = tk.Text(frame, height=1, width=20, font=("Arial", 13))
+    quantity_text.grid(row=3, column=1, padx=5, pady=5)
+
+    description_label = tk.Label(frame, text="Description:", font=("Arial", 13))
+    description_label.grid(row=4, column=0, padx=5, pady=5)
+    description_text = tk.Text(frame, height=6, width=20, font=("Arial", 13))
+    description_text.grid(row=4, column=1, padx=5, pady=5)
+
+    # populate the text boxes with some sample data
+    company_text.insert("end", data_list[1])
+    category_text.insert("end", data_list[2])
+    price_text.insert("end", data_list[3])
+    quantity_text.insert("end", data_list[4])
+    description_text.insert("end", data_list[5])
+
+    company_text.config(state="disabled")
+    category_text.config(state="disabled")
+    price_text.config(state="disabled")
+    quantity_text.config(state="disabled")
+    description_text.config(state="disabled")
+
+    def add_to_order():
+        root = tk.Tk()
+        root.title("Confirmation Window")
+        root.geometry("500x100")
+        
+        form_label = tk.Label(root, text="How many would you like to purchase", font=("TkDefaultFont", 12))
+        form_label.pack()
+        
+        amount_entry = tk.Entry(root)
+        amount_entry.pack()
+        
+        def display_error(stock):
+            error_root = tk.Tk()
+            error_root.title("ERROR")
+            error_root.geometry("250x200")
+            
+            error_message = "Not enough product in stock. ? remain in stock.".format(stock)
+            error = tk.Label(error_root, text="Not enough product in stock", font=("TkDefaultFont", 16))
+            error.pack()
+            
+            def on_back_click():
+                root.destroy()
+            
+            cancel_button = tk.Button(root, text="Close", command=on_back_click)
+            cancel_button.pack()
+
+        def add():
+            amount = amount_entry.get()
+            
+            cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(productID))
+            stock = (cursor.fetchone())[2]
+            
+            if(int(amount)>int(stock)):
+                display_error(stock)
+            else:
+                print(amount)
+                order.append([productID,amount])
+                root.destroy()
+            
+        def on_back_click():
+            root.destroy()
+    
+        confirm_button = tk.Button(root,text="Confirm", command=add)
+        confirm_button.pack()
+        
+        cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+        cancel_button.pack()
+
+
+    add_button = tk.Button(root, text="Add To Order", command=add_to_order)
+    add_button.pack()
+
+    # add close button at the bottom
+    close_button = tk.Button(root, text="Close", command=root.destroy)
+    close_button.pack(side="bottom", pady=10)
+
+
+def open_product_page_old(productID, order):
     product_page = tk.Tk()
     product_page.title("Product Details")
     product_page.geometry("1250x500")
