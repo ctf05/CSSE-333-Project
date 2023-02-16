@@ -6,8 +6,10 @@ import pyodbc
 
 
 def connect(server, database, username, password):
-    conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+    conn = pyodbc.connect(
+        'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
     return conn
+
 
 conn = connect("titan.csse.rose-hulman.edu", "OneProduct", "SodaBaseUserbeadlich", "Password123")
 conn.autocommit = True
@@ -27,31 +29,40 @@ global card_type_entry
 global appTable
 global ordTable
 
+
 def click(event):
-    maxRange = len(appTable.item(appTable.selection())['values'])
-    for i in range(0, maxRange):
-        y = event.y
-        if (y >= (25 + (i * 20)) and y <= (45 + (i * 20))):
-            x = event.x
-            applicationID = appTable.item(appTable.selection())['values'][0]
-            productID = appTable.item(appTable.selection())['values'][1]
-            if (x >= 981):
-                cursor.execute("""EXEC dbo.DenyApplication @AppId = ?, @ProdId = ?""", (applicationID, productID))
-            elif (x >= 840):
-                cursor.execute("""EXEC dbo.ApproveApplication @AppID = ?, @ProdId = ?""", (applicationID, productID))
-    cursor.execute("""EXEC dbo.getApplicatonInfo""")
-    insert_data(cursor.fetchall())
+    maxRange = 10
+    try:
+        for i in range(0, maxRange):
+            y = event.y
+            if (y >= (25 + (i * 20)) and y <= (45 + (i * 20))):
+                x = event.x
+                applicationID = appTable.item(appTable.selection())['values'][0]
+                productID = appTable.item(appTable.selection())['values'][1]
+                if (x >= 981):
+                    cursor.execute("""EXEC dbo.DenyApplication @AppId = ?, @ProdId = ?""", (applicationID, productID))
+                elif (x >= 840):
+                    cursor.execute("""EXEC dbo.ApproveApplication @AppID = ?, @ProdId = ?""",
+                                   (applicationID, productID))
+        cursor.execute("""EXEC dbo.getApplicatonInfo""")
+        insert_data(cursor.fetchall())
+    except IndexError:
+        print("Keep your clicks in the box, please")
+
 
 def clickOrd(event):
-    maxRange = len(ordTable.item(ordTable.selection())['values'])
-    for i in range(0, maxRange):
-        y = event.y
-        x = event.x
-        if (y >= (25 + (i * 20)) and y <= (45 + (i * 20)) and x >= 700 and x <= 840):
-            orderID = ordTable.item(ordTable.selection())['values'][0]
-            cursor.execute("""EXEC dbo.ShipOrder @ID = ?""", (orderID))
-    cursor.execute("""EXEC dbo.getOrderInfo""")
-    insert_data_order(cursor.fetchall())
+    try:
+        maxRange = 10
+        for i in range(0, maxRange):
+            y = event.y
+            x = event.x
+            if (y >= (25 + (i * 20)) and y <= (45 + (i * 20)) and x >= 700 and x <= 840):
+                orderID = ordTable.item(ordTable.selection())['values'][0]
+                cursor.execute("""EXEC dbo.ShipOrder @ID = ?""", (orderID))
+        cursor.execute("""EXEC dbo.getOrderInfo""")
+        insert_data_order(cursor.fetchall())
+    except IndexError:
+        print("Keep your clicks in the box, please")
 
 
 def insert_data(data_list):
@@ -65,6 +76,7 @@ def insert_data(data_list):
         appTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], "~ Approve ~", "~ Deny ~"))
         i += 1
 
+
 def insert_data_order(data_list):
     global ordTable
     for item in ordTable.get_children():
@@ -73,6 +85,7 @@ def insert_data_order(data_list):
     for row in data_list:
         ordTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], "~ Ship ~"))
         i += 1
+
 
 def login_success():
     root = tk.Tk()
@@ -85,7 +98,8 @@ def login_success():
     global appTable
     global ordTable
     # Create a table to display data
-    appTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"), show='headings')
+    appTable = ttk.Treeview(root, columns=("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"),
+                            show='headings')
     appTable.heading("col1", text="Application ID")
     appTable.column("col1", width=140, anchor="center")
     appTable.heading("col2", text="Product ID")
@@ -96,7 +110,7 @@ def login_success():
     appTable.column("col4", width=140, anchor="center")
     appTable.heading("col5", text="Date")
     appTable.column("col5", width=140, anchor="center")
-    appTable.heading("col6", text="ShippedData")
+    appTable.heading("col6", text="Status")
     appTable.column("col6", width=140, anchor="center")
     appTable.heading("col7", text="Approve Button")
     appTable.column("col7", width=140, anchor="center")
@@ -128,6 +142,7 @@ def login_success():
     product_button = tk.Button(root, text="Update Products", command=view_admin_product)
     product_button.grid(row=12, column=0)
 
+
 def view_admin_product():
     root = tk.Tk()
     root.geometry("1250x500")
@@ -158,14 +173,14 @@ def view_admin_product():
             pTable.delete(item)
         for row in data_list:
             pTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
-    
-    def get_products():    
+
+    def get_products():
         cursor.execute("""Exec dbo.AdminViewProducts""")
-        
+
         data_list = cursor.fetchall()
         pids = []
         insert_data_home(data_list)
-    
+
     get_products()
 
     frame = ttk.Frame(root)
@@ -200,7 +215,7 @@ def view_admin_product():
 
         if price == "":
             price = None
-        
+
         if stock == "":
             stock = None
 
@@ -216,9 +231,9 @@ def view_admin_product():
         if stock == None or stock.isdigit():
             print("stock is good")
         else:
-             status_page(sTitle, "Stock is not a number")
-             return
-        
+            status_page(sTitle, "Stock is not a number")
+            return
+
         if forSale == None:
             print("For Sale good")
         elif forSale.lower() == "true" or forSale == "1":
@@ -236,13 +251,14 @@ def view_admin_product():
 
         # item = pTable.item(sel[0])
         # pid = item.get('values')[0]
-        
+
         try:
             for k in range(len(sel)):
                 item = pTable.item(sel[k])
                 pid = item.get('values')[0]
-                cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
-            
+                cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""",
+                               (pid, price, stock, forSale))
+
             get_products()
 
             if stock != None or price != None or forSale != None:
@@ -251,13 +267,14 @@ def view_admin_product():
                 stock_entry.delete(0, tk.END)
                 status_page(sTitle, "Update Success")
         except:
-            status_page(sTitle, "Error updating products")        
+            status_page(sTitle, "Error updating products")
 
     submit_button = ttk.Button(root, text="Submit", command=update_products)
     submit_button.pack(pady=10)
 
     close_button = ttk.Button(root, text="Close", command=root.destroy)
     close_button.pack(pady=10)
+
 
 def view_admin_product_old():
     root = tk.Tk()
@@ -290,13 +307,13 @@ def view_admin_product_old():
 
     def get_products():
         cursor.execute("""Exec dbo.ViewAllProducts""")
-        
+
         products = cursor.fetchall()
         listbox.delete(0, tk.END)
-        
+
         for product in products:
             listbox.insert(tk.END, product)
-        listbox.pack()    
+        listbox.pack()
 
     def update_products():
         sTitle = "Product Update"
@@ -309,7 +326,7 @@ def view_admin_product_old():
 
         if price == "":
             price = None
-        
+
         if stock == "":
             stock = None
 
@@ -325,9 +342,9 @@ def view_admin_product_old():
         if stock == None or stock.isdigit():
             print("stock is good")
         else:
-             status_page(sTitle, "Stock is not a number")
-             return
-        
+            status_page(sTitle, "Stock is not a number")
+            return
+
         if forSale == None:
             print("For Sale good")
         elif forSale.lower() == "true":
@@ -345,9 +362,10 @@ def view_admin_product_old():
         csIndex = listbox.curselection()[0]
         productInfo = listbox.get(csIndex).split(",")
         pid = productInfo[0][1:]
-        
+
         try:
-            cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""", (pid, price, stock, forSale))
+            cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""",
+                           (pid, price, stock, forSale))
             get_products()
 
             if stock != None or price != None or forSale != None:
@@ -360,31 +378,32 @@ def view_admin_product_old():
                 product_stock_entry.delete(0, tk.END)
         except:
             status_page(sTitle, "Error updating products")
-        
 
     submit_button = tk.Button(root, text="Submit", command=update_products)
     submit_button.pack()
 
     get_products()
 
-def status_page(title, message): 
+
+def status_page(title, message):
     confirm_root = tk.Tk()
     confirm_root.title(title)
     confirm_root.geometry("250x200")
-        
+
     confirm = tk.Label(confirm_root, text=message, font=("TkDefaultFont", 16))
-    confirm.grid(row=0,column=0)
-        
+    confirm.grid(row=0, column=0)
+
     def on_back_click():
         confirm_root.destroy()
-        
+
     ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
-    ok_button.grid() 
+    ok_button.grid()
 
 
 def login_failure():
     # code to run if login fails
     pass
+
 
 def check_credentials():
     # check if the entered username and password match
@@ -421,21 +440,20 @@ def check_credentials():
         login_failure()
 
 
-
 def home_page(cid):
     root = tk.Tk()
     root.geometry("1250x500")
     root.title("Home Page")
 
-    global order 
+    global order
     order = []
 
     global pids
     pids = []
 
     def view_cart_page():
-        cart_page(cid,order)
-        
+        cart_page(cid, order)
+
     def view_order_page():
         order_page(cid)
 
@@ -485,6 +503,7 @@ def home_page(cid):
     pTable.heading("col4", text="Quantity")
     pTable.column("col4", width=140, anchor="center")
     pTable.pack(pady=10)
+
     # pTable.grid(row=10, column=0, columnspan=4, padx=5, pady=10)
     # cursor.execute("""EXEC dbo.AllProductsForSale""")
 
@@ -504,7 +523,7 @@ def home_page(cid):
             cursor.execute("""Exec dbo.AllProductsForSale""")
         else:
             cursor.execute("""Exec dbo.ProductsWithCategory @cat = ?""", catName)
-        
+
         data_list = cursor.fetchall()
         pids = []
         insert_data_home(data_list)
@@ -675,76 +694,72 @@ def open_product_page_old(productID, order):
     product_description_label.pack()
     product_description_display = tk.Label(product_page, text=product[9])
     product_description_display.pack()
-    
+
     def add_to_order():
         root = tk.Tk()
         root.title("Confirmation Window")
         root.geometry("500x100")
-        
+
         form_label = tk.Label(root, text="How many would you like to purchase", font=("TkDefaultFont", 12))
         form_label.pack()
-        
+
         amount_entry = tk.Entry(root)
         amount_entry.pack()
-        
+
         def display_error(stock):
             error_root = tk.Tk()
             error_root.title("ERROR")
             error_root.geometry("250x200")
-            
+
             error_message = "Not enough product in stock. ? remain in stock.".format(stock)
             error = tk.Label(error_root, text="Not enough product in stock", font=("TkDefaultFont", 16))
             error.pack()
-            
+
             def on_back_click():
                 root.destroy()
-            
+
             cancel_button = tk.Button(root, text="Close", command=on_back_click)
             cancel_button.pack()
 
         def add():
             amount = amount_entry.get()
-            
-            cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(productID))
+
+            cursor.execute("{CALL dbo.ReadProductSpecific (?)}", (productID))
             stock = (cursor.fetchone())[2]
-            
-            if(int(amount)>int(stock)):
+
+            if (int(amount) > int(stock)):
                 display_error(stock)
             else:
                 print(amount)
-                order.append([productID,amount])
+                order.append([productID, amount])
                 root.destroy()
-            
+
         def on_back_click():
             root.destroy()
-    
-        confirm_button = tk.Button(root,text="Confirm", command=add)
+
+        confirm_button = tk.Button(root, text="Confirm", command=add)
         confirm_button.pack()
-        
+
         cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
         cancel_button.pack()
-              
+
     def on_back_click():
         product_page.destroy()
 
+    add_button = tk.Button(product_page, text="Add To Order", command=add_to_order)
+    add_button.pack()
 
-    add_button = tk.Button(product_page,text="Add To Order", command=add_to_order)
-    add_button.pack()  
-    
     back_button = tk.Button(product_page, text="Back", command=on_back_click)
     back_button.pack()
-    
-    
-    
+
 
 def submit_application(name, company, category, price, description, phone, website):
-    
     title = "Application"
 
     if name == "" or company == "" or category == "" or price == "" or description == "" or phone == "" or website == "":
         status_page(title, "Please fill out all input fields")
         return False
-    
+
     if price.isnumeric():
         print("price is good")
     else:
@@ -759,22 +774,22 @@ def submit_application(name, company, category, price, description, phone, websi
         return False
 
     try:
-        cursor.execute("""EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""", 
-        (name, category, company, description, price, phone, website))
+        cursor.execute(
+            """EXEC dbo.SubmitProductApplication @PName = ?, @CatName = ?, @SName = ?, @PDesc = ?, @ProPrice = ?, @SPhone = ?, @SWebsite = ?""",
+            (name, category, company, description, price, phone, website))
 
         status_page(title, "Application Successfully Submited")
         return True
     except:
         status_page(title, "Error Submitting Application")
-        return False    
-
+        return False
 
 
 def check_phone_input(phone):
     if len(phone) != 12:
         print("len fault")
         return False
-    
+
     for k in range(12):
         if k == 3 or k == 7:
             if not phone[k] == "-":
@@ -784,7 +799,7 @@ def check_phone_input(phone):
             if not phone[k].isdigit():
                 print("digit fault")
                 return False
-    
+
     return True
 
 
@@ -874,7 +889,8 @@ def registration_page():
     card_type_entry.grid(row=9, column=1, padx=10, pady=10)
     # Create a submit button
     submitRegister = tk.Button(root, text="Submit", command=SubmitRegister)
-    submitRegister.grid(row=10,column=0)
+    submitRegister.grid(row=10, column=0)
+
 
 def SubmitRegister():
     global username_entry
@@ -929,15 +945,16 @@ def SubmitRegister():
     if len(security) != 3 or not security.isnumeric():
         status_page(title, "Security Code is not a 3 digit number")
         return
-    
+
     if not check_date(expiration):
         status_page(title, "Please format exirpation date as: year-month-day, xxxx-xx-xx")
-        return    
+        return
 
     try:
         cursor.execute("EXEC dbo.RegisterUser @UserName = ?, @PasswordSalt = ?, @PasswordHash = ?, @Address = ?, "
                        "@FName = ?, @LName = ?, @Phone = ?, @CardType = ?, @CardNumber = ?, @ExperationDate = ?, @SecurityCode = ?",
-                       (username, password_salt.decode(), password_hash.decode()[0:49], address, first_name, last_name, phone, card_type,
+                       (username, password_salt.decode(), password_hash.decode()[0:49], address, first_name, last_name,
+                        phone, card_type,
                         card, expiration, security))
         status_page(title, "Registration Success")
         username = username_entry.delete(0, tk.END)
@@ -957,7 +974,7 @@ def SubmitRegister():
 def check_date(date):
     if len(date) != 10:
         return False
-    
+
     for k in range(10):
         if k == 4 or k == 7:
             if not date[k] == "-":
@@ -965,7 +982,7 @@ def check_date(date):
         else:
             if not date[k].isdigit():
                 return False
-    
+
     return True
 
 
@@ -1034,9 +1051,10 @@ def application_page():
         print("Product Price:", product_price)
         print("Product Description:", product_description)
         print("Product Company Website:", product_company_website)
-        print("Product Company Phone Number:" , product_company_phone)
+        print("Product Company Phone Number:", product_company_phone)
 
-        status = submit_application(product_name, product_company, product_category, product_price, product_description, product_company_phone, product_company_website)
+        status = submit_application(product_name, product_company, product_category, product_price, product_description,
+                                    product_company_phone, product_company_website)
 
         if status:
             product_name = product_name_entry.delete(0, tk.END)
@@ -1057,157 +1075,156 @@ def application_page():
     cancel_button.pack()
 
 
-def cart_page(cid,order):
+def cart_page(cid, order):
     root = tk.Tk()
     root.title("Cart")
     root.geometry("750x500")
-    
+
     pad_label = tk.Label(root, text="       ", font=("TkDefaultFont", 16))
     pad_label.grid(row=0, column=0)
-    
+
     form_label = tk.Label(root, text="Review order", font=("TkDefaultFont", 16))
     form_label.grid(row=0, column=1)
-    
+
     order_label = tk.Label(root, text="Product, Amount, Price", font=("TkDefaultFont", 10))
-    order_label.grid(row=1, column=1,sticky='W')
-    
-    item_listbox = tk.Listbox(root, width=100, selectmode = 'single')
-    
+    order_label.grid(row=1, column=1, sticky='W')
+
+    item_listbox = tk.Listbox(root, width=100, selectmode='single')
+
     for item in order:
-        
-        cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(item[0]))
+        cursor.execute("{CALL dbo.ReadProductSpecific (?)}", (item[0]))
         product = cursor.fetchone()
         prod_name = product[0]
-        price = int(item[1])*int(product[1])
-        
-        item_string = "    {},    {},    {}".format(prod_name,item[1],price)
+        price = int(item[1]) * int(product[1])
+
+        item_string = "    {},    {},    {}".format(prod_name, item[1], price)
         item_listbox.insert(tk.END, item_string)
     item_listbox.grid(row=2, column=1)
-    
-    
+
     address_entry = tk.Entry(root)
     address_entry.grid(row=3, column=1)
-    
+
     def confirm_order():
         confirm_root = tk.Tk()
         confirm_root.title("Success")
         confirm_root.geometry("250x200")
-            
+
         confirm = tk.Label(confirm_root, text="Order Placed", font=("TkDefaultFont", 16))
-        confirm.grid(row=0,column=0)
-            
+        confirm.grid(row=0, column=0)
+
         def on_back_click():
             confirm_root.destroy()
-            
+
         ok_button = tk.Button(confirm_root, text="Ok", command=on_back_click)
-        ok_button.grid(row=2,column=0)
-    
+        ok_button.grid(row=2, column=0)
+
     def submit_order():
         address = address_entry.get()
-        
-        cursor.execute("""SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @ShipAddress = ?,@OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",(cid,address))
+
+        cursor.execute(
+            """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @ShipAddress = ?,@OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
+            (cid, address))
         order_id = (cursor.fetchone())[0]
         print(order_id)
         for item in order:
-            cursor.execute("{CALL dbo.addToOrder (?,?,?)}",(order_id,item[0],item[1]))
-            
+            cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, item[0], item[1]))
+
         confirm_order()
-            
+
     def on_back_click():
         root.destroy()
-    
-    
-    submit_button = tk.Button(root,text="Place order",command=submit_order)
+
+    submit_button = tk.Button(root, text="Place order", command=submit_order)
     submit_button.grid(row=4, column=1)
-    
+
     cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-    cancel_button.grid(row=6, column=1)   
+    cancel_button.grid(row=6, column=1)
+
 
 def order_page(cid):
     root = tk.Tk()
     root.title("Current Orders")
     root.geometry("750x500")
-    
+
     pad_label = tk.Label(root, text="       ", font=("TkDefaultFont", 16))
     pad_label.grid(row=0, column=0)
-    
+
     form_label = tk.Label(root, text="Select an order", font=("TkDefaultFont", 16))
     form_label.grid(row=0, column=1)
-    
+
     order_label = tk.Label(root, text="Order Number, Order Date, Address, Shipping Date", font=("TkDefaultFont", 10))
-    order_label.grid(row=1, column=1,sticky='W')
-    
-    cursor.execute("{CALL dbo.ReadCustomerOrders (?)}",(cid))
+    order_label.grid(row=1, column=1, sticky='W')
+
+    cursor.execute("{CALL dbo.ReadCustomerOrders (?)}", (cid))
     orders = cursor.fetchall()
-    listbox = tk.Listbox(root, width=100, selectmode = 'single')
+    listbox = tk.Listbox(root, width=100, selectmode='single')
     for order in orders:
         date = str(order[1])
         ship_date = str(order[3])
-        order_string = "    {},    {},    {},    {}".format(order[0],date,order[2],ship_date)
+        order_string = "    {},    {},    {},    {}".format(order[0], date, order[2], ship_date)
         listbox.insert(tk.END, order_string)
     listbox.grid(row=2, column=1)
-  
-    
+
     def selected_order():
         selection = tuple((listbox.get(listbox.curselection())).strip('()').split(','))
         print(selection[0])
-        return(int(selection[0]))
-    
+        return (int(selection[0]))
+
     def selected_detail():
         selection = tuple((details_listbox.get(details_listbox.curselection())).strip('()').split(','))
         print(selection)
-        return(selection)
- 
+        return (selection)
+
     def show_details():
-        details_listbox.delete(0,tk.END)
+        details_listbox.delete(0, tk.END)
         cursor.execute("{CALL dbo.ReadSpecificOnOrder (?)}", (selected_order()))
         details = cursor.fetchall()
         for detail in details:
             price = str(detail[4])
-            detail_string = "    {},    {},    {},    {},    ${}".format(detail[0],detail[1],detail[2],detail[3],price)
+            detail_string = "    {},    {},    {},    {},    ${}".format(detail[0], detail[1], detail[2], detail[3],
+                                                                         price)
             details_listbox.insert(tk.END, detail_string)
-        
 
     display_details = tk.Button(root, text='details', command=show_details)
     display_details.grid(row=3, column=1)
-    
-    detail_label = tk.Label(root, text="Order Number, Product Number, Product Name, Amount, Price", font=("TkDefaultFont", 10))
-    detail_label.grid(row=4, column=1,sticky='W')
-    
-    details_listbox = tk.Listbox(root, width=100, selectmode = 'single')
+
+    detail_label = tk.Label(root, text="Order Number, Product Number, Product Name, Amount, Price",
+                            font=("TkDefaultFont", 10))
+    detail_label.grid(row=4, column=1, sticky='W')
+
+    details_listbox = tk.Listbox(root, width=100, selectmode='single')
     details_listbox.grid(row=5, column=1)
-    
-   
+
     def confirm_delete():
         root = tk.Tk()
         root.title("Confirmation Window")
         root.geometry("500x100")
-        
-        form_label = tk.Label(root, text="Are you sure you want to remove the selected product from your order?", font=("TkDefaultFont", 12))
-        form_label.grid(row=0, column=0,columnspan=2)
-        
+
+        form_label = tk.Label(root, text="Are you sure you want to remove the selected product from your order?",
+                              font=("TkDefaultFont", 12))
+        form_label.grid(row=0, column=0, columnspan=2)
+
         def delete_from_order():
-            cursor.execute("{CALL dbo.DeleteFromOrder (?,?)}", (selected_detail()[0],selected_detail()[1]))
+            cursor.execute("{CALL dbo.DeleteFromOrder (?,?)}", (selected_detail()[0], selected_detail()[1]))
             root.destroy()
-            
+
         def on_back_click():
             root.destroy()
-    
-        confirm_button = tk.Button(root,text="Yes", command=delete_from_order)
+
+        confirm_button = tk.Button(root, text="Yes", command=delete_from_order)
         confirm_button.grid(row=1, column=0)
-        
+
         cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
         cancel_button.grid(row=1, column=1)
 
-    delete_button = tk.Button(root,text="Remove selected product from order", command=confirm_delete)
+    delete_button = tk.Button(root, text="Remove selected product from order", command=confirm_delete)
     delete_button.grid(row=4, column=2)
-    
+
     def on_back_click():
         root.destroy()
-    
-    cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-    cancel_button.grid(row=6, column=1)   
 
+    cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
+    cancel_button.grid(row=6, column=1)
 
 
 root = tk.Tk()
@@ -1236,24 +1253,20 @@ add_product_button.grid(row=5, column=10, columnspan=5)
 
 register_picture = tk.PhotoImage(file='register.png').subsample(5)
 register = tk.Button(root, image=register_picture, command=registration_page)
-register.grid(row=5,column=15, columnspan=5)
+register.grid(row=5, column=15, columnspan=5)
 
 root.mainloop()
 
 
-
 def execute_stored_procedure(conn):
-    #connect to the SQL Server instance
+    # connect to the SQL Server instance
 
     # call the stored procedure and pass the values of the dropdown menus as parameters
     ##cursor.execute("{CALL dbo.addCustomer (?,?,?,?,?)}", ("fname", "lname", "123-545-3443", "jonesville", None))
     cursor.execute("{CALL dbo.addCustomer ('re','ree','123-454-3232','jone',null)}")
     # retrieve the results of the stored procedure
-    #results = cursor.fetchall()
+    # results = cursor.fetchall()
     # close the connection to the SQL Server instance
     cursor.close()
     conn.close()
-    #return results
-
-
-
+    # return results
