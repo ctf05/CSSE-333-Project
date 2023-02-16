@@ -1101,8 +1101,9 @@ def cart_page(cid, order):
         item_listbox.insert(tk.END, item_string)
     item_listbox.grid(row=2, column=1)
 
-    address_entry = tk.Entry(root)
-    address_entry.grid(row=3, column=1)
+
+    # address_entry = tk.Entry(root)
+    # address_entry.grid(row=3, column=1)
 
     def confirm_order():
         confirm_root = tk.Tk()
@@ -1119,11 +1120,11 @@ def cart_page(cid, order):
         ok_button.grid(row=2, column=0)
 
     def submit_order():
-        address = address_entry.get()
+        # address = address_entry.get()
 
         cursor.execute(
-            """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @ShipAddress = ?,@OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
-            (cid, address))
+            """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
+            (cid))
         order_id = (cursor.fetchone())[0]
         print(order_id)
         for item in order:
