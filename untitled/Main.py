@@ -130,10 +130,10 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
             break
         else:
             status_page("Data Insert", "Success")
-    # cursor.execute("""EXEC dbo.getApplicatonInfo""")
-    # insert_data(cursor.fetchall())
-    # cursor.execute("""EXEC dbo.getOrderInfo""")
-    # insert_data_order(cursor.fetchall())
+    cursor.execute("""EXEC dbo.getApplicatonInfo""")
+    insert_data(cursor.fetchall())
+    cursor.execute("""EXEC dbo.getOrderInfo""")
+    insert_data_order(cursor.fetchall())
 
 
 
@@ -1117,8 +1117,6 @@ register_picture = tk.PhotoImage(file='register.png').subsample(5)
 register = tk.Button(root, image=register_picture, command=registration_page)
 register.grid(row=5, column=15, columnspan=5)
 
-Data_button = tk.Button(root, text="Import Data", command=insertDataIntoSQL)
-Data_button.grid(row=12, column=1)
 
 root.mainloop()
 
