@@ -90,7 +90,6 @@ def insert_data_order(data_list):
         i += 1
 
 def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products and 5 users.
-    #product, application, customer, supplier, category, billing info, login,
     storedProcedureArray = ["{CALL SubmitProductApplication (?, ?, ?, ?, ?, ?, ?)}", "{CALL RegisterUser (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}", "The orders insertion is randomized and doesn't use an excel file"]
     checkArray = ["{CALL ReadProduct}", "{CALL ReadCustomer}", "{CALL ReadOrder}"]
     # Load the Excel data into a Pandas dataframe
@@ -98,6 +97,7 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
 
     # Loop through each row in the dataframe
     for i in range(0, len(storedProcedureArray)):
+        print(i)
         if i != 2:
             df = pd.read_excel(excelFileArray[i])
         result1 = cursor.execute(checkArray[i])
@@ -112,9 +112,11 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
                     order_id = (cursor.fetchone())[0]
                     maxRange = randrange(1, 3)
                     for i in range(0, maxRange):
-                        cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, randrange(0, 9), randrange(1, 5)))
+                        cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, randrange(1, 9), randrange(1, 5)))
             else:
                 # Call the stored procedure to insert the row into the database
+                print(storedProcedureArray[i])
+                print(row)
                 cursor.execute(storedProcedureArray[i], row)
                 if i == 0:
                     cursor.execute("EXEC dbo.UpdateProduct @ID = ?, @NumberInStock = ?", (index + 1, randrange(1000, 2000)))
@@ -130,6 +132,7 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
             break
         else:
             status_page("Data Insert", "Success")
+    print("Done")
     cursor.execute("""EXEC dbo.getApplicatonInfo""")
     insert_data(cursor.fetchall())
     cursor.execute("""EXEC dbo.getOrderInfo""")
