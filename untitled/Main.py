@@ -801,7 +801,7 @@ def SubmitRegister():
         status_page(title, "Please format exirpation date as: year-month-day, xxxx-xx-xx")
         return
 
-    if card_type != "Credit" and cart_page != "Debit":
+    if card_type != "Credit" and card_type != "Debit":
         status_page(title, "Invalid Card Type")
         return
 
