@@ -276,114 +276,6 @@ def view_admin_product():
     close_button.pack(pady=10)
 
 
-def view_admin_product_old():
-    root = tk.Tk()
-    root.geometry("1250x500")
-    root.title("Admin Control Panel")
-
-    label = tk.Label(root, text="Admin Products Page", font=("TkDefaultFont", 16))
-    label.pack()
-
-    listbox = tk.Listbox(root, width=100)
-    listbox.pack()
-
-    product_price_label = tk.Label(root, text="Product Price:")
-    product_price_label.pack()
-
-    product_price_entry = tk.Entry(root)
-    product_price_entry.pack()
-
-    product_stock_label = tk.Label(root, text="Number In Stock:")
-    product_stock_label.pack()
-
-    product_stock_entry = tk.Entry(root)
-    product_stock_entry.pack()
-
-    product_forSale_label = tk.Label(root, text="For Sale:")
-    product_forSale_label.pack()
-
-    product_forSale_entry = tk.Entry(root)
-    product_forSale_entry.pack()
-
-    def get_products():
-        cursor.execute("""Exec dbo.ViewAllProducts""")
-
-        products = cursor.fetchall()
-        listbox.delete(0, tk.END)
-
-        for product in products:
-            listbox.insert(tk.END, product)
-        listbox.pack()
-
-    def update_products():
-        sTitle = "Product Update"
-        price = product_price_entry.get()
-        stock = product_stock_entry.get()
-        forSale = product_forSale_entry.get()
-
-        if forSale == "":
-            forSale = None
-
-        if price == "":
-            price = None
-
-        if stock == "":
-            stock = None
-
-        if price == None or price.isnumeric():
-            print("price is good")
-        else:
-            try:
-                float(price)
-            except:
-                status_page(sTitle, "Price is not a number")
-                return
-
-        if stock == None or stock.isdigit():
-            print("stock is good")
-        else:
-            status_page(sTitle, "Stock is not a number")
-            return
-
-        if forSale == None:
-            print("For Sale good")
-        elif forSale.lower() == "true":
-            forSale = 1
-        elif forSale.lower() == "false":
-            forSale = 0
-        else:
-            status_page(sTitle, "Please make a valid input for 'For Sale'.\n Valid inputs are: True or False")
-            return
-
-        if len(listbox.curselection()) == 0:
-            status_page(sTitle, "Please make a selection before submitting")
-            return
-
-        csIndex = listbox.curselection()[0]
-        productInfo = listbox.get(csIndex).split(",")
-        pid = productInfo[0][1:]
-
-        try:
-            cursor.execute("""EXEC dbo.UpdateProduct @ID = ?, @Price = ?, @NumberInStock = ?, @ForSale = ?""",
-                           (pid, price, stock, forSale))
-            get_products()
-
-            if stock != None or price != None or forSale != None:
-                product_forSale_entry.delete(0, tk.END)
-                product_price_entry.delete(0, tk.END)
-                product_stock_entry.delete(0, tk.END)
-                status_page(sTitle, "Update Success")
-                product_price_entry.delete(0, tk.END)
-                product_forSale_entry.delete(0, tk.END)
-                product_stock_entry.delete(0, tk.END)
-        except:
-            status_page(sTitle, "Error updating products")
-
-    submit_button = tk.Button(root, text="Submit", command=update_products)
-    submit_button.pack()
-
-    get_products()
-
 
 def status_page(title, message):
     confirm_root = tk.Tk()
@@ -628,6 +520,9 @@ def open_product_page(productID, order):
 
         def add():
             amount = amount_entry.get()
+
+            if not amount.isnumeric():
+                status_page("Order Error", "Please enter a number")
             
             cursor.execute("{CALL dbo.ReadProductSpecific (?)}",(productID))
             stock = (cursor.fetchone())[2]
@@ -638,6 +533,7 @@ def open_product_page(productID, order):
                 print(amount)
                 order.append([productID,amount])
                 root.destroy()
+                status_page("Order", "Added To Cart")
             
         def on_back_click():
             root.destroy()
@@ -656,100 +552,6 @@ def open_product_page(productID, order):
     close_button = tk.Button(root, text="Close", command=root.destroy)
     close_button.pack(side="bottom", pady=10)
 
-
-def open_product_page_old(productID, order):
-    product_page = tk.Tk()
-    product_page.title("Product Details")
-    product_page.geometry("1250x500")
-
-    label = tk.Label(product_page, text="Product Details", font=("TkDefaultFont", 16))
-    label.pack()
-
-    cursor.execute("""Exec dbo.ProductFromID @pid = ?""", productID)
-    product = cursor.fetchall()[0]
-    print(product)
-
-    product_name_label = tk.Label(product_page, text="Product Name: ")
-    product_name_label.pack()
-    product_name_display = tk.Label(product_page, text=product[1])
-    product_name_display.pack()
-
-    product_company_label = tk.Label(product_page, text="Company: ")
-    product_company_label.pack()
-    product_company_display = tk.Label(product_page, text=product[2])
-    product_company_display.pack()
-
-    product_category_label = tk.Label(product_page, text="Category: ")
-    product_category_label.pack()
-    product_category_display = tk.Label(product_page, text=product[3])
-    product_category_display.pack()
-
-    product_price_label = tk.Label(product_page, text="Price: ")
-    product_price_label.pack()
-    product_price_display = tk.Label(product_page, text=product[4])
-    product_price_display.pack()
-
-    product_description_label = tk.Label(product_page, text="Description: ")
-    product_description_label.pack()
-    product_description_display = tk.Label(product_page, text=product[9])
-    product_description_display.pack()
-
-    def add_to_order():
-        root = tk.Tk()
-        root.title("Confirmation Window")
-        root.geometry("500x100")
-
-        form_label = tk.Label(root, text="How many would you like to purchase", font=("TkDefaultFont", 12))
-        form_label.pack()
-
-        amount_entry = tk.Entry(root)
-        amount_entry.pack()
-
-        def display_error(stock):
-            error_root = tk.Tk()
-            error_root.title("ERROR")
-            error_root.geometry("250x200")
-
-            error_message = "Not enough product in stock. ? remain in stock.".format(stock)
-            error = tk.Label(error_root, text="Not enough product in stock", font=("TkDefaultFont", 16))
-            error.pack()
-
-            def on_back_click():
-                root.destroy()
-
-            cancel_button = tk.Button(root, text="Close", command=on_back_click)
-            cancel_button.pack()
-
-        def add():
-            amount = amount_entry.get()
-
-            cursor.execute("{CALL dbo.ReadProductSpecific (?)}", (productID))
-            stock = (cursor.fetchone())[2]
-
-            if (int(amount) > int(stock)):
-                display_error(stock)
-            else:
-                print(amount)
-                order.append([productID, amount])
-                root.destroy()
-
-        def on_back_click():
-            root.destroy()
-
-        confirm_button = tk.Button(root, text="Confirm", command=add)
-        confirm_button.pack()
-
-        cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
-        cancel_button.pack()
-
-    def on_back_click():
-        product_page.destroy()
-
-    add_button = tk.Button(product_page, text="Add To Order", command=add_to_order)
-    add_button.pack()
-
-    back_button = tk.Button(product_page, text="Back", command=on_back_click)
-    back_button.pack()
 
 
 def submit_application(name, company, category, price, description, phone, website):
@@ -1125,6 +927,10 @@ def cart_page(cid, order):
     def submit_order():
         # address = address_entry.get()
 
+        if len(order) == 0:
+            status_page("Cart Page", "Nothing In Cart")
+            return
+
         cursor.execute(
             """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
             (cid))
@@ -1133,6 +939,8 @@ def cart_page(cid, order):
         for item in order:
             cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, item[0], item[1]))
 
+        order.clear()
+        root.destroy()
         confirm_order()
 
     def on_back_click():
