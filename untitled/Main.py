@@ -661,8 +661,8 @@ def registration_page():
     root = tk.Tk()
     root.geometry("1250x500")
     root.title("Registration Page")
-    global username_entry
-    global password_entry
+    global username_entry_reg
+    global password_entry_reg
     global first_name_entry
     global last_name_entry
     global address_entry
@@ -671,8 +671,8 @@ def registration_page():
     global expiration_entry
     global security_entry
     global card_type_entry
-    global username_label
-    global password_label
+    global username_label_reg
+    global password_label_reg
     global first_name_label
     global last_name_label
     global address_label
@@ -682,17 +682,17 @@ def registration_page():
     global security_label
     global card_type_label
     # Create a label for the username input box
-    username_label = tk.Label(root, text="Username")
-    username_label.grid(row=0, column=0, padx=10, pady=10)
+    username_label_reg = tk.Label(root, text="Username")
+    username_label_reg.grid(row=0, column=0, padx=10, pady=10)
     # Create an input box for the username
-    username_entry = tk.Entry(root)
-    username_entry.grid(row=0, column=1, padx=10, pady=10)
+    username_entry_reg = tk.Entry(root)
+    username_entry_reg.grid(row=0, column=1, padx=10, pady=10)
     # Create a label for the password input box
-    password_label = tk.Label(root, text="Password")
-    password_label.grid(row=1, column=0, padx=10, pady=10)
+    password_label_reg = tk.Label(root, text="Password")
+    password_label_reg.grid(row=1, column=0, padx=10, pady=10)
     # Create an input box for the password
-    password_entry = tk.Entry(root, show="*")
-    password_entry.grid(row=1, column=1, padx=10, pady=10)
+    password_entry_reg = tk.Entry(root, show="*")
+    password_entry_reg.grid(row=1, column=1, padx=10, pady=10)
     # Create a label for the first name input box
     first_name_label = tk.Label(root, text="First Name")
     first_name_label.grid(row=2, column=0, padx=10, pady=10)
@@ -747,8 +747,8 @@ def registration_page():
 
 
 def SubmitRegister():
-    global username_entry
-    global password_entry
+    global username_entry_reg
+    global password_entry_reg
     global first_name_entry
     global last_name_entry
     global address_entry
@@ -758,9 +758,9 @@ def SubmitRegister():
     global security_entry
     global card_type_entry
     # Get the username from the input box
-    username = username_entry.get()
+    username = username_entry_reg.get()
     # Get the password from the input box
-    password = password_entry.get()
+    password = password_entry_reg.get()
     # Get the first name from the input box
     first_name = first_name_entry.get()
     # Get the last name from the input box
@@ -815,8 +815,8 @@ def SubmitRegister():
                         phone, card_type,
                         card, expiration, security))
         status_page(title, "Registration Success")
-        username = username_entry.delete(0, tk.END)
-        password = password_entry.delete(0, tk.END)
+        username = username_entry_reg.delete(0, tk.END)
+        password = password_entry_reg.delete(0, tk.END)
         first_name = first_name_entry.delete(0, tk.END)
         last_name = last_name_entry.delete(0, tk.END)
         address = address_entry.delete(0, tk.END)
