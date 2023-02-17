@@ -401,8 +401,7 @@ def status_page(title, message):
 
 
 def login_failure():
-    # code to run if login fails
-    pass
+    status_page("Login", "Username or Password Incorrect")
 
 
 def check_credentials():
