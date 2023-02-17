@@ -3,7 +3,10 @@ from tkinter import ttk
 
 import bcrypt as bcrypt
 import pyodbc
-
+import pandas as pd
+import openpyxl #this may say it's unused but it's required so make sure you have it
+from numpy import random
+#My login is ctf05, pass
 
 def connect(server, database, username, password):
     conn = pyodbc.connect(
@@ -86,6 +89,48 @@ def insert_data_order(data_list):
         ordTable.insert("", tk.END, values=(row[0], row[1], row[2], row[3], row[4], "~ Ship ~"))
         i += 1
 
+def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products and 5 users.
+    #product, application, customer, supplier, category, billing info, login,
+    storedProcedureArray = ["{CALL SubmitProductApplication (?, ?, ?, ?, ?, ?, ?)}", "{CALL RegisterUser (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}", "The orders insertion is randomized and doesn't use an excel file"]
+    checkArray = ["{CALL ReadProduct}", "{CALL ReadCustomer}", "{CALL ReadOrder}"]
+    # Load the Excel data into a Pandas dataframe
+    excelFileArray = ["ProductApplication.xlsx", "Customer.xlsx"]
+
+    # Loop through each row in the dataframe
+    for i in range(0, len(excelFileArray)):
+        df = pd.read_excel(excelFileArray[i])
+        for index, row in df.iterrows():
+            print(index)
+            row = row.astype(str).tolist()
+            result1 = cursor.execute(checkArray[i])
+            print(row)
+            if i == 3:
+                cursor.execute(
+                    """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
+                    (random.randrange(0, 5)))
+                order_id = (cursor.fetchone())[0]
+                print(order_id)
+                maxRange = random.randrange(1, 3)
+                for i in range(0, maxRange):
+                    cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, random.randrange(0, 9), random.randrange(1, 5)))
+            else:
+                # Call the stored procedure to insert the row into the database
+                cursor.execute(storedProcedureArray[i], row)
+                if i == 1 and index < 10:
+                    cursor.execute("{CALL ApproveApplication (?,?)}", (index, index))
+            result2 = cursor.execute(checkArray[i])
+            # Check for errors
+            if len(result1.fetchall()) != len(result2.fetchall()):
+                status_page("Data Insert", f"Error inserting row: {index} Excel File: {excelFileArray[i]} Stored Procedure: {storedProcedureArray[i]}")
+                break
+            else:
+                status_page("Data Insert", "Success")
+    # cursor.execute("""EXEC dbo.getApplicatonInfo""")
+    # insert_data(cursor.fetchall())
+    # cursor.execute("""EXEC dbo.getOrderInfo""")
+    # insert_data_order(cursor.fetchall())
+
+
 
 def login_success():
     root = tk.Tk()
@@ -134,13 +179,15 @@ def login_success():
     ordTable.column("col5", width=140, anchor="center")
     ordTable.heading("col7", text="Ship Button")
     ordTable.column("col7", width=140, anchor="center")
-    ordTable.grid(row=12, column=1, columnspan=4, padx=5, pady=10)
+    ordTable.grid(row=12, column=2, columnspan=4, padx=5, pady=10)
     cursor.execute("""EXEC dbo.getOrderInfo""")
     insert_data_order(cursor.fetchall())
     ordTable.bind("<Double-1>", clickOrd)
 
     product_button = tk.Button(root, text="Update Products", command=view_admin_product)
     product_button.grid(row=12, column=0)
+    Data_button = tk.Button(root, text="Import Data", command=insertDataIntoSQL)
+    Data_button.grid(row=12, column=1)
 
 
 def view_admin_product():
@@ -274,8 +321,6 @@ def view_admin_product():
 
     close_button = ttk.Button(root, text="Close", command=root.destroy)
     close_button.pack(pady=10)
-
-
 
 def status_page(title, message):
     confirm_root = tk.Tk()
@@ -1066,6 +1111,9 @@ add_product_button.grid(row=5, column=10, columnspan=5)
 register_picture = tk.PhotoImage(file='register.png').subsample(5)
 register = tk.Button(root, image=register_picture, command=registration_page)
 register.grid(row=5, column=15, columnspan=5)
+
+Data_button = tk.Button(root, text="Import Data", command=insertDataIntoSQL)
+Data_button.grid(row=12, column=1)
 
 root.mainloop()
 
