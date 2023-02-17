@@ -112,7 +112,7 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
                     order_id = (cursor.fetchone())[0]
                     maxRange = randrange(1, 3)
                     for i in range(0, maxRange):
-                        cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, randrange(0, 9), randrange(1, 5)))
+                        cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, randrange(1, 9), randrange(1, 5)))
             else:
                 # Call the stored procedure to insert the row into the database
                 cursor.execute(storedProcedureArray[i], row)
