@@ -949,6 +949,10 @@ def SubmitRegister():
         status_page(title, "Please format exirpation date as: year-month-day, xxxx-xx-xx")
         return
 
+    if card_type != "Credit" and cart_page != "Debit":
+        status_page(title, "Invalid Card Type")
+        return
+
     try:
         cursor.execute("EXEC dbo.RegisterUser @UserName = ?, @PasswordSalt = ?, @PasswordHash = ?, @Address = ?, "
                        "@FName = ?, @LName = ?, @Phone = ?, @CardType = ?, @CardNumber = ?, @ExperationDate = ?, @SecurityCode = ?",
@@ -1217,8 +1221,8 @@ def order_page(cid):
         cancel_button = tk.Button(root, text="Cancel", command=on_back_click)
         cancel_button.grid(row=1, column=1)
 
-    delete_button = tk.Button(root, text="Remove selected product from order", command=confirm_delete)
-    delete_button.grid(row=4, column=2)
+    # delete_button = tk.Button(root, text="Remove selected product from order", command=confirm_delete)
+    # delete_button.grid(row=4, column=2)
 
     def on_back_click():
         root.destroy()
