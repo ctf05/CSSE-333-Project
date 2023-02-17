@@ -5,7 +5,7 @@ import bcrypt as bcrypt
 import pyodbc
 import pandas as pd
 import openpyxl #this may say it's unused but it's required so make sure you have it
-from numpy import random
+from random import randrange
 #My login is ctf05, pass
 
 def connect(server, database, username, password):
@@ -14,7 +14,7 @@ def connect(server, database, username, password):
     return conn
 
 
-conn = connect("titan.csse.rose-hulman.edu", "OneProduct", "SodaBaseUserbeadlich", "Password123")
+conn = connect("titan.csse.rose-hulman.edu", "OneProductNewTestChristian", "SodaBaseUserbeadlich", "Password123")
 conn.autocommit = True
 cursor = conn.cursor()
 global tree
@@ -97,34 +97,39 @@ def insertDataIntoSQL(): #Assumes you are submitting a minimum of 12 products an
     excelFileArray = ["ProductApplication.xlsx", "Customer.xlsx"]
 
     # Loop through each row in the dataframe
-    for i in range(0, len(excelFileArray)):
-        df = pd.read_excel(excelFileArray[i])
+    for i in range(0, len(storedProcedureArray)):
+        if i != 2:
+            df = pd.read_excel(excelFileArray[i])
+        result1 = cursor.execute(checkArray[i])
+        results1Len = len(result1.fetchall())
         for index, row in df.iterrows():
-            print(index)
             row = row.astype(str).tolist()
-            result1 = cursor.execute(checkArray[i])
-            print(row)
-            if i == 3:
-                cursor.execute(
-                    """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
-                    (random.randrange(0, 5)))
-                order_id = (cursor.fetchone())[0]
-                print(order_id)
-                maxRange = random.randrange(1, 3)
-                for i in range(0, maxRange):
-                    cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, random.randrange(0, 9), random.randrange(1, 5)))
+            if i == 2:
+                for z in range(0, 10):
+                    cursor.execute(
+                        """SET NOCOUNT ON;DECLARE @orderID int;EXEC [dbo].[addOrder] @CustomerID = ?, @OrderID = @orderID OUTPUT;SELECT @orderID AS the_output;""",
+                        (randrange(1, 5)))
+                    order_id = (cursor.fetchone())[0]
+                    maxRange = randrange(1, 3)
+                    for i in range(0, maxRange):
+                        cursor.execute("{CALL dbo.addToOrder (?,?,?)}", (order_id, randrange(0, 9), randrange(1, 5)))
             else:
                 # Call the stored procedure to insert the row into the database
                 cursor.execute(storedProcedureArray[i], row)
-                if i == 1 and index < 10:
-                    cursor.execute("{CALL ApproveApplication (?,?)}", (index, index))
-            result2 = cursor.execute(checkArray[i])
-            # Check for errors
-            if len(result1.fetchall()) != len(result2.fetchall()):
-                status_page("Data Insert", f"Error inserting row: {index} Excel File: {excelFileArray[i]} Stored Procedure: {storedProcedureArray[i]}")
-                break
-            else:
-                status_page("Data Insert", "Success")
+                if i == 0:
+                    cursor.execute("EXEC dbo.UpdateProduct @ID = ?, @NumberInStock = ?", (index + 1, randrange(1000, 2000)))
+                    if index < 10:
+                        cursor.execute("{CALL ApproveApplication (?,?)}", (index + 1, index + 1))
+        result2 = cursor.execute(checkArray[i])
+        results2Len = len(result2.fetchall())
+        # Check for errors
+        if results1Len == results2Len:
+            print(results1Len)
+            print(results2Len)
+            status_page("Data Insert", f"Error inserting row: {index} Excel File: {excelFileArray[i]} Stored Procedure: {storedProcedureArray[i]}")
+            break
+        else:
+            status_page("Data Insert", "Success")
     # cursor.execute("""EXEC dbo.getApplicatonInfo""")
     # insert_data(cursor.fetchall())
     # cursor.execute("""EXEC dbo.getOrderInfo""")
